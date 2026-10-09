@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"></head><body>
+<title>Townline Sitebook Prototype</title>
+<style>
+/* Townline Graphic Standards (2018): Black R35 G31 B32, Blue R120 G141 B164 (PMS 2158), Dark Blue R69 G90 B121 (PMS 2161),
+   Medium Blue R110 G130 B158, Dark Gray R109 G110 B113, Silver R167 G169 B172. Type: Fakt Pro / Fakt Con Pro, Arial fallback. */
+/* Layout: app shell — black brand rail, top bar with project switcher, working canvas with list + slide-over detail */
+:root{
+  --bg:#f3f4f6; --panel:#ffffff; --ink:#231f20; --muted:#6d6e71; --line:#d9dde3; --rail:#231f20; --rail-ink:#c9ccd1;
+  --accent:#455a79; --accent-ink:#ffffff; --accent-soft:#e4e9f0; --brand:#788da4; --viewer:#e9ecf0; --sheet:#ffffff; --sheet-ink:#3a3c40; --sheet-faint:#c3c8cf;
+  --good:#3d7a57; --warn:#a1742a; --crit:#a84444; --info:#455a79;
+  --good-soft:#e2eee7; --warn-soft:#f3ebdc; --crit-soft:#f4e1e1; --info-soft:#e4e9f0;
+  --display:"Arial Narrow",Arial,sans-serif; --body:Arial,Helvetica,sans-serif; --mono:Arial,Helvetica,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#1b191a; --panel:#252223; --ink:#ececed; --muted:#a7a9ac; --line:#3a3739; --rail:#121011; --rail-ink:#a7a9ac;
+  --accent:#788da4; --accent-ink:#121011; --accent-soft:#2c333d; --brand:#788da4; --viewer:#1f1d1e; --sheet:#2a2829; --sheet-ink:#d3d5d8; --sheet-faint:#4a4749;
+  --good:#6fb48b; --warn:#d2a75a; --crit:#d97a7a; --info:#9fb1c5;
+  --good-soft:#1f3128; --warn-soft:#352c1c; --crit-soft:#3a2424; --info-soft:#2c333d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#1b191a; --panel:#252223; --ink:#ececed; --muted:#a7a9ac; --line:#3a3739; --rail:#121011; --rail-ink:#a7a9ac;
+  --accent:#788da4; --accent-ink:#121011; --accent-soft:#2c333d; --brand:#788da4; --viewer:#1f1d1e; --sheet:#2a2829; --sheet-ink:#d3d5d8; --sheet-faint:#4a4749;
+  --good:#6fb48b; --warn:#d2a75a; --crit:#d97a7a; --info:#9fb1c5;
+  --good-soft:#1f3128; --warn-soft:#352c1c; --crit-soft:#3a2424; --info-soft:#2c333d; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+.app{display:grid;grid-template-columns:220px 1fr;min-height:100%}
+.rail{background:var(--rail);color:var(--rail-ink);padding:18px 12px;display:flex;flex-direction:column;gap:2px}
+.brand{padding:6px 10px 14px;display:flex;flex-direction:column;gap:10px}
+.brand img{width:150px;max-width:100%;height:auto;display:block}
+.brand span{font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.32em;color:var(--brand);text-transform:uppercase}
+.navgroup{font-family:var(--display);font-size:11px;text-transform:uppercase;letter-spacing:.14em;opacity:.6;padding:12px 10px 4px}
+.nav{all:unset;cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-radius:6px;font-size:14px}
+.nav:hover{background:rgba(255,255,255,.06)}
+.nav:focus-visible{outline:2px solid var(--brand)}
+.nav.on{background:rgba(255,255,255,.08);color:#fff;position:relative}
+.nav.on::before{content:"";position:absolute;left:-12px;top:50%;transform:translateY(-50%);border-left:7px solid var(--brand);border-top:7px solid transparent;border-bottom:7px solid transparent}
+.nav .ct{font-size:11px;opacity:.7;font-variant-numeric:tabular-nums}
+.main{min-width:0;display:flex;flex-direction:column}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:12px 24px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.switch{display:flex;align-items:center;gap:10px;min-width:0}
+.switch label{font-family:var(--display);font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+.switch select{border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:7px 10px;font-weight:600;max-width:100%}
+.who{display:flex;flex-wrap:wrap;gap:10px;align-items:center;color:var(--muted);font-size:13px}
+.demo{font-size:11px;letter-spacing:.06em;background:var(--warn-soft);color:var(--warn);padding:3px 8px;border-radius:4px}
+.canvas{padding:24px;display:flex;flex-direction:column;gap:20px;min-width:0}
+h1{font-family:var(--display);font-size:32px;font-weight:600;margin:0;line-height:1.05;text-wrap:balance;text-transform:uppercase;letter-spacing:.03em}
+h2{font-family:var(--display);font-size:17px;font-weight:600;margin:0;text-transform:uppercase;letter-spacing:.06em}
+h3{font-family:var(--display);font-size:14px;font-weight:600;margin:0;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+b,strong{font-weight:600}
+.sub{color:var(--muted);margin:4px 0 0}
+.head{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between}
+.btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:8px 14px;cursor:pointer;font-weight:600;font-size:13px}
+.btn:hover{border-color:var(--muted)}
+.btn.sm{padding:5px 10px;font-size:12px}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.on{background:var(--accent-soft);border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;cursor:pointer;text-align:left}
+.tile .k{font-family:var(--display);font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
+.tile .v{font-family:var(--display);font-size:34px;font-weight:600;font-variant-numeric:tabular-nums}
+.tile .n{font-size:12px;color:var(--muted)}
+.tile .n b{color:var(--crit)}
+.grid2{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
+.card h2{margin-bottom:10px}
+.tbl{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-family:var(--display);font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+tbody tr[data-open]{cursor:pointer}
+tbody tr[data-open]:hover{background:var(--bg)}
+.num{font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.r{text-align:right}
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.p-open{background:var(--info-soft);color:var(--info)}
+.p-over{background:var(--crit-soft);color:var(--crit)}
+.p-pend{background:var(--warn-soft);color:var(--warn)}
+.p-done{background:var(--good-soft);color:var(--good)}
+.ext{font-size:10px;font-weight:600;border:1px solid var(--line);color:var(--muted);border-radius:3px;padding:0 4px;margin-left:4px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;border:1px solid var(--line);border-radius:6px;padding:3px 8px;background:var(--panel);cursor:pointer;white-space:nowrap;color:var(--accent)}
+.chip:hover{border-color:var(--accent)}
+.chip i{display:inline-block;width:0;height:0;border-left:6px solid var(--brand);border-top:5px solid transparent;border-bottom:5px solid transparent}
+.filters{display:flex;flex-wrap:wrap;gap:8px}
+.filters input,.filters select{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:7px 10px}
+.filters input{min-width:0;flex:1 1 200px}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent)}
+.bar i.over{background:var(--crit)}
+.list{display:flex;flex-direction:column}
+.li{display:flex;gap:10px;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px}
+.li:last-child{border-bottom:0}
+.li .t{min-width:0}
+.li[data-open],.li[data-go-sheet],.li[data-go-model]{cursor:pointer}
+.li[data-open]:hover,.li[data-go-sheet]:hover,.li[data-go-model]:hover{background:var(--bg)}
+.muted{color:var(--muted)}
+.drawer{position:fixed;inset:0;display:flex;justify-content:flex-end;background:rgba(10,10,12,.4);z-index:20}
+.drawer .in{width:min(540px,100%);height:100%;background:var(--panel);border-left:1px solid var(--line);overflow-y:auto;padding:24px;padding-top:calc(24px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:16px}
+.dl{display:grid;grid-template-columns:130px 1fr;gap:8px 12px;font-size:13px;margin:0}
+.dl dt{color:var(--muted)}
+.dl dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.thread{display:flex;flex-direction:column;gap:10px}
+.msg{border:1px solid var(--line);border-radius:6px;padding:10px 12px;font-size:13px}
+.msg .m{font-size:11px;color:var(--muted);margin-bottom:4px}
+form.f{display:flex;flex-direction:column;gap:12px}
+.f label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.f input,.f select,.f textarea{border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:8px 10px;color:var(--ink);font-size:14px}
+.f .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.linkbox{border:1px dashed var(--accent);background:var(--accent-soft);border-radius:6px;padding:8px 10px;font-size:12px}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:6px;font-size:13px;z-index:30;max-width:calc(100% - 32px)}
+.note{font-size:12px;color:var(--muted);border-left:3px solid var(--brand);padding:6px 10px;background:var(--accent-soft);border-radius:0 4px 4px 0}
+.note.warn{border-left-color:var(--warn);background:var(--warn-soft);color:var(--ink)}
+/* workspace layouts for drawings and models */
+.work{display:grid;grid-template-columns:240px minmax(0,1fr);gap:16px;align-items:start}
+.work.model{grid-template-columns:minmax(0,1fr) 300px}
+.side{display:flex;flex-direction:column;gap:12px;min-width:0}
+.sheetlist{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.sheetlist button{all:unset;display:block;width:100%;box-sizing:border-box;padding:9px 12px;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px}
+.sheetlist button:last-child{border-bottom:0}
+.sheetlist button:hover{background:var(--bg)}
+.sheetlist button.on{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.sheetlist button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--line)}
+.sheetwrap{position:relative;aspect-ratio:10/7;max-width:100%;background:var(--bg);cursor:grab;touch-action:none}
+.sheetwrap.placing{cursor:crosshair}
+.sheetwrap svg{width:100%;height:100%;display:block}
+.viewer{position:relative;height:clamp(360px,62vh,680px);background:var(--viewer)}
+.viewer .hud{position:absolute;left:10px;bottom:10px;font-size:11px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:3px 8px;pointer-events:none}
+.viewer .loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px}
+.layers{display:flex;flex-wrap:wrap;gap:6px}
+.layers label{display:flex;gap:6px;align-items:center;font-size:12px;border:1px solid var(--line);border-radius:6px;padding:4px 8px;cursor:pointer}
+.sw{width:10px;height:10px;border-radius:2px;display:inline-block}
+@keyframes pulse{0%{r:14}50%{r:30}100%{r:14}}
+.focusring{fill:none;stroke:var(--crit);stroke-width:3}
+@media (prefers-reduced-motion:no-preference){.focusring{animation:pulse 1.4s ease-in-out 3}}
+.files{display:grid;grid-template-columns:200px minmax(0,1fr);gap:16px;align-items:start}
+.ft{display:inline-block;min-width:38px;text-align:center;font-size:10px;font-weight:600;letter-spacing:.06em;border-radius:3px;padding:2px 4px;color:#fff;background:var(--muted)}
+.ft.pdf{background:#a84444}.ft.dwg{background:#455a79}.ft.rvt{background:#2f6f8f}.ft.ifc{background:#6e829e}.ft.nwd{background:#3d7a57}.ft.doc{background:#3c5f9e}.ft.xls{background:#3d7a57}.ft.img{background:#8a6d3b}
+.drop{border:1px dashed var(--line);border-radius:8px;padding:14px;text-align:center;color:var(--muted);font-size:13px}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.rv{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center}
+@media (max-width:980px){.work,.work.model,.files{grid-template-columns:1fr}}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .rail{flex-direction:row;overflow-x:auto;padding:8px 12px;gap:2px}
+  .brand,.navgroup{display:none}
+  .nav{white-space:nowrap}
+  .nav .ct{display:none}
+  .nav.on::before{display:none}
+  .grid2{grid-template-columns:1fr}
+  .top,.canvas{padding-inline:16px}
+  .dl{grid-template-columns:1fr}
+  .f .row{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:no-preference){.drawer .in{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(24px);opacity:.6}}}
+</style>
+
+<div class="app">
+  <nav class="rail" id="rail" aria-label="Tools"></nav>
+  <div class="main">
+    <header class="top">
+      <div class="switch">
+        <label for="proj">Project</label>
+        <select id="proj"></select>
+      </div>
+      <div class="who"><span class="demo">PROTOTYPE · SAMPLE DATA</span><label for="as">Viewing as</label><select id="as" class="btn sm"></select></div>
+    </header>
+    <main class="canvas" id="view"></main>
+  </div>
+</div>
+<div id="drawer" class="drawer" hidden><div class="in" id="drawerIn" role="dialog" aria-modal="true"></div></div>
+<div id="toast" class="toast" hidden></div>
+<input type="file" id="fileIn" hidden multiple>
+
+<script>
+const TODAY = new Date('2026-10-09');
+const PEOPLE = [
+  {id:'tm',name:'Thomas M.',co:'Townline',role:'Project Manager',ext:false},
+  {id:'sk',name:'Sara K.',co:'Townline',role:'Superintendent',ext:false},
+  {id:'jl',name:'James L.',co:'Townline',role:'Project Coordinator',ext:false},
+  {id:'ar',name:'Anita R.',co:'Lorem Architecture Inc. (sample)',role:'Architect',ext:true},
+  {id:'dc',name:'Dev C.',co:'Northline Structural (sample)',role:'Structural Engineer',ext:true},
+  {id:'mp',name:'Maria P.',co:'Coastal Mechanical (sample)',role:'Mechanical Trade',ext:true},
+  {id:'ew',name:'Eric W.',co:'Bright Electric (sample)',role:'Electrical Trade',ext:true},
+];
+const P = id => PEOPLE.find(p=>p.id===id);
+const d = s => new Date(s);
+const fmt = s => d(s).toLocaleDateString('en-CA',{month:'short',day:'numeric',timeZone:'UTC'});
+const money = n => (n<0?'−':'')+'$'+Math.abs(n).toLocaleString('en-CA',{maximumFractionDigits:0});
+const kb = n => n>1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB';
+
+// Sample 3D models: buildingSMART "Simple Scene" house (CC BY 4.0), split by discipline like a real federated set
+const SAMPLE_MODELS = [
+  {key:'Building-Architecture',file:'Architectural.ifc',disc:'Architectural',color:'#788da4'},
+  {key:'Building-Structural',file:'Structural.ifc',disc:'Structural',color:'#a1742a'},
+  {key:'Building-Hvac',file:'Mechanical-HVAC.ifc',disc:'Mechanical',color:'#3d7a57'}];
+const G = {duct:'38WbwIGD90nB_3T2BTU5Ed', cover:'23uPJWDfXEcwHH3kdFgV9c', girder:'0fqX614OH1YO1Njdxms2$Q', roofR:'12UVOn4wvAJPMUExKdZLb8', chimney:'3Fbgsvr8nAYfGs9y5keub0', kitchen:'2e9pghUJbBqR4jTInsONQT'};
+
+function mkFiles(prefix,extra=[]){return [
+  {f:'Contracts',n:`${prefix} Prime Contract (CCDC 2) – executed.pdf`,sz:4.2e6,by:'tm',dt:'2026-02-14',v:1},
+  {f:'Contracts',n:`${prefix} Subcontract – Coastal Mechanical.pdf`,sz:1.9e6,by:'jl',dt:'2026-04-02',v:2},
+  {f:'Contracts',n:`${prefix} Subcontract – Bright Electric.pdf`,sz:1.7e6,by:'jl',dt:'2026-04-09',v:1},
+  {f:'CAD',n:`${prefix}_Site-Survey.dwg`,sz:6.8e6,by:'jl',dt:'2026-01-20',v:3},
+  {f:'CAD',n:`${prefix}_Level-Plans-Base.dwg`,sz:11.2e6,by:'ar',dt:'2026-09-30',v:7},
+  {f:'Models',n:`${prefix}_ARCH_Central.rvt`,sz:248e6,by:'ar',dt:'2026-09-30',v:12},
+  {f:'Models',n:`${prefix}_STR_Central.rvt`,sz:131e6,by:'dc',dt:'2026-10-01',v:9},
+  {f:'Models',n:`${prefix}_MEP-Federated.nwd`,sz:310e6,by:'mp',dt:'2026-10-06',v:4},
+  {f:'Specifications',n:`${prefix} Project Manual – Div 01–33.pdf`,sz:22.4e6,by:'ar',dt:'2026-05-11',v:2},
+  {f:'Reports',n:`${prefix} Geotechnical Report.pdf`,sz:9.6e6,by:'tm',dt:'2025-11-03',v:1},
+  {f:'Reports',n:`${prefix} Budget Tracking.xlsx`,sz:0.6e6,by:'tm',dt:'2026-10-05',v:31},
+  {f:'Permits',n:`${prefix} Building Permit BP-2026-0412.pdf`,sz:0.9e6,by:'tm',dt:'2026-03-01',v:1},
+  ...extra]}
+
+const PROJECTS = {
+  'TL-2401': {name:'Harbourview Tower', city:'North Vancouver', type:'22-storey concrete residential, 186 units', team:['tm','sk','jl','ar','dc','mp','ew'], models:true,
+    budget:[['01 General Requirements',2400000,2310000,2280000],['03 Concrete',11800000,11950000,9200000],['05 Metals',1650000,1580000,820000],['08 Openings',4200000,4380000,1200000],['09 Finishes',6900000,6100000,300000],['22 Plumbing',3800000,3720000,1650000],['23 HVAC',4600000,4710000,1900000],['26 Electrical',4100000,3990000,1700000]],
+    rfis:[
+      {n:'RFI-041',t:'Slab edge detail at L14 balcony – drip groove conflict',to:'ar',by:'sk',due:'2026-10-02',st:'Open',imp:'Schedule',loc:'Level 14',dwg:'A-301',x:300,y:240},
+      {n:'RFI-042',t:'Transfer beam TB-3 rebar congestion at column C7',to:'dc',by:'sk',due:'2026-10-07',st:'Open',imp:'Cost + Schedule',loc:'Level 3',dwg:'S-203',x:520,y:330},
+      {n:'RFI-043',t:'Confirm suite 1204 kitchen hood duct route',to:'mp',by:'jl',due:'2026-10-14',st:'Open',imp:'None',loc:'Level 12',dwg:'M-412',x:410,y:210},
+      {n:'RFI-044',t:'Electrical room door hardware set clarification',to:'ar',by:'jl',due:'2026-10-16',st:'Open',imp:'None',loc:'P1',dwg:'A-601',x:640,y:420},
+      {n:'RFI-039',t:'Parkade drain locations vs. revised grading',to:'mp',by:'sk',due:'2026-09-24',st:'Answered',imp:'None',loc:'P2',dwg:'P-101',x:250,y:450},
+      {n:'RFI-038',t:'Window sill height at amenity level',to:'ar',by:'tm',due:'2026-09-20',st:'Closed',imp:'None',loc:'Level 2',dwg:'A-301',x:700,y:180}],
+    si:[
+      {n:'SI-017',t:'Add blocking for grab bars in adaptable units',to:'mp',st:'Issued',date:'2026-10-05',cost:'Pending'},
+      {n:'SI-016',t:'Relocate cleanout at gridline 4/B per site walk',to:'mp',st:'Acknowledged',date:'2026-09-29',cost:'No cost'},
+      {n:'SI-015',t:'Increase lighting level in P1 lobby',to:'ew',st:'Complete',date:'2026-09-18',cost:'$4,850'}],
+    cos:[
+      {n:'CO-012',t:'Upgraded balcony glazing per owner request',amt:186000,st:'Pending owner',src:'Owner change',date:'2026-10-03'},
+      {n:'CO-011',t:'Additional rebar at TB-3 (RFI-042)',amt:42500,st:'Pending pricing',src:'RFI-042',date:'2026-10-07'},
+      {n:'CO-010',t:'Delete feature wall in amenity lounge',amt:-18200,st:'Approved',src:'Design change',date:'2026-09-15'},
+      {n:'CO-009',t:'Unforeseen soil remediation at NE corner',amt:96400,st:'Approved',src:'Site condition',date:'2026-08-28'}],
+    ci:[
+      {n:'CI-092',t:'Flue duct penetrates roof slab – no firestop or flashing detail',trade:'Mechanical',to:'mp',by:'tm',st:'Open',loc:'Roof',src:'Clash: HVAC vs Architectural',link:{kind:'model',guid:G.duct,point:[7.9,4.55,-7.95]}},
+      {n:'CI-091',t:'Chimney cover clashes with right roof slab at ridge',trade:'Architectural',to:'ar',by:'tm',st:'Open',loc:'Roof',src:'Clash: HVAC vs Architectural',link:{kind:'model',guid:G.cover,point:[8.05,4.85,-7.95]}},
+      {n:'CI-090',t:'Girder bearing at kitchen wall – confirm beam shoe capacity',trade:'Structural',to:'dc',by:'jl',st:'Open',loc:'Level 1',src:'Model review',link:{kind:'model',guid:G.girder,point:[7.85,2.5,-6.25]}},
+      {n:'CI-088',t:'Sprinkler main clashes with HVAC duct, corridor L9',trade:'Mechanical',to:'mp',by:'sk',st:'Open',loc:'Level 9',src:'Sheet markup',link:{kind:'sheet',sheet:'M-412',x:560,y:300}},
+      {n:'CI-089',t:'Cable tray below beam clearance, P1 electrical room',trade:'Electrical',to:'ew',by:'sk',st:'Open',loc:'P1',src:'Sheet markup',link:{kind:'sheet',sheet:'E-301',x:380,y:360}},
+      {n:'CI-085',t:'Plumbing stack offset through transfer slab',trade:'Plumbing',to:'mp',by:'tm',st:'Resolved',loc:'Level 3',src:'Clash: HVAC vs Structural',link:{kind:'model',guid:G.chimney,point:[8.05,2.2,-7.6]}}],
+    reviews:[
+      {n:'DR-007',t:'IFC set 3 – Architectural, Levels 12–22',sheets:['A-301','A-601'],due:'2026-10-15',st:'In review',bb:'482-115-903',
+        rv:[{id:'ar',st:'Approved'},{id:'dc',st:'Reviewing'},{id:'mp',st:'Returned'}],
+        cm:[{by:'mp',sheet:'A-301',x:430,y:300,t:'Bulkhead depth at corridor is 300 mm; supply duct needs 400 mm.'},{by:'mp',sheet:'A-301',x:620,y:380,t:'No access panel shown for fire damper above suite entry.'},{by:'dc',sheet:'A-601',x:300,y:240,t:'Door frame anchors need to clear PT tendons – confirm layout.'}]},
+      {n:'DR-006',t:'Transfer level framing – Rev 6',sheets:['S-203'],due:'2026-10-04',st:'In review',bb:'482-115-877',
+        rv:[{id:'dc',st:'Approved'},{id:'ar',st:'Reviewing'}],cm:[{by:'dc',sheet:'S-203',x:520,y:330,t:'Added stirrups at TB-3; see RFI-042.'}]},
+      {n:'DR-005',t:'Typical suite mechanical – Rev 3',sheets:['M-412'],due:'2026-09-15',st:'Complete',bb:'',
+        rv:[{id:'mp',st:'Approved'},{id:'ar',st:'Approved'}],cm:[]}],
+    dwgs:[['A-301','Wall sections L12–L22','Rev 4','2026-09-30','482-115-903'],['A-601','Door hardware schedule','Rev 2','2026-08-20',''],['S-203','Transfer level framing','Rev 6','2026-10-01','482-115-877'],['M-412','Typical suite mechanical','Rev 3','2026-09-12',''],['P-101','Parkade P2 plumbing','Rev 5','2026-09-22',''],['E-301','P1 power plan','Rev 3','2026-09-10','']],
+    files:mkFiles('HV'),
+    assets:[
+      {id:'AST-0412',name:'Domestic water booster pump',cat:'Plumbing',loc:'P1 Mech Room',mfr:'Grundfos (sample)',model:'Hydro MPC-E',warr:'2028-11-30',st:'Installed',docs:2,req:4},
+      {id:'AST-0413',name:'Make-up air unit MAU-1',cat:'HVAC',loc:'Roof',mfr:'Engineered Air (sample)',model:'LM-90',warr:'2028-11-30',st:'Planned',docs:1,req:4},
+      {id:'AST-0420',name:'Fire pump and controller',cat:'Life safety',loc:'P1 Fire Pump Rm',mfr:'Sample Mfr',model:'FP-750',warr:'2028-11-30',st:'Commissioned',docs:4,req:4},
+      {id:'AST-1204-01',name:'Range hood – Suite 1204',cat:'Appliance',loc:'Suite 1204',mfr:'Sample Mfr',model:'RH-30',warr:'2027-11-30',st:'Installed',docs:3,req:3},
+      {id:'AST-0431',name:'Main switchgear MSB',cat:'Electrical',loc:'P1 Elec Room',mfr:'Sample Mfr',model:'SG-3000A',warr:'2028-11-30',st:'Installed',docs:2,req:4}]
+  },
+  'TL-2307': {name:'Cedar Row Townhomes', city:'Langley', type:'48 wood-frame townhomes, 8 buildings', team:['tm','sk','ar','mp','ew'], models:true,
+    budget:[['01 General Requirements',900000,880000,640000],['06 Wood & Framing',5200000,5350000,4100000],['07 Roofing',1100000,1060000,700000],['09 Finishes',3100000,3000000,1200000],['26 Electrical',1400000,1380000,900000]],
+    rfis:[
+      {n:'RFI-112',t:'Building 5 roof truss layout vs. revised dormer',to:'ar',by:'sk',due:'2026-10-05',st:'Open',imp:'Schedule',loc:'Bldg 5',dwg:'A-205',x:480,y:260},
+      {n:'RFI-113',t:'Exterior light fixture spec substitution',to:'ar',by:'tm',due:'2026-10-19',st:'Open',imp:'Cost',loc:'All buildings',dwg:'E-101',x:300,y:380},
+      {n:'RFI-110',t:'Unit 31 stair stringer clearance',to:'ar',by:'sk',due:'2026-09-28',st:'Closed',imp:'None',loc:'Bldg 4',dwg:'A-410',x:600,y:300}],
+    si:[{n:'SI-009',t:'Add exterior hose bib at end units',to:'ew',st:'Issued',date:'2026-10-02',cost:'Pending'}],
+    cos:[{n:'CO-006',t:'Upgrade to triple-pane windows, Bldg 7–8',amt:74000,st:'Pending owner',src:'Owner change',date:'2026-10-01'},{n:'CO-005',t:'Additional site drainage at Bldg 2',amt:21800,st:'Approved',src:'Site condition',date:'2026-09-02'}],
+    ci:[{n:'CI-015',t:'Fireplace flue duct runs through roof slab – confirm penetration detail',trade:'Mechanical',to:'mp',by:'sk',st:'Open',loc:'Bldg 3 roof',src:'Clash: HVAC vs Architectural',link:{kind:'model',guid:G.duct,point:[7.9,4.55,-7.95]}},
+        {n:'CI-014',t:'Dryer vent route conflicts with floor joist, Plan B',trade:'Mechanical',to:'sk',by:'tm',st:'Open',loc:'Bldg 3',src:'Site walk',link:{kind:'sheet',sheet:'A-205',x:640,y:420}}],
+    reviews:[{n:'DR-003',t:'Building 5 roof revisions',sheets:['A-205'],due:'2026-10-12',st:'In review',bb:'',rv:[{id:'ar',st:'Reviewing'}],cm:[]}],
+    dwgs:[['A-205','Bldg 5 roof plan','Rev 3','2026-09-29',''],['E-101','Site lighting','Rev 2','2026-09-01',''],['A-410','Stair details','Rev 2','2026-08-11','']],
+    files:mkFiles('CR').filter(f=>!/Bright|STR/.test(f.n)),
+    assets:[{id:'AST-0101',name:'Heat pump – Unit 1',cat:'HVAC',loc:'Unit 1',mfr:'Sample Mfr',model:'HP-24',warr:'2031-06-30',st:'Planned',docs:1,req:4},{id:'AST-0102',name:'Electric water heater – Unit 1',cat:'Plumbing',loc:'Unit 1',mfr:'Sample Mfr',model:'WH-50',warr:'2032-06-30',st:'Planned',docs:1,req:3}]
+  },
+  'TL-2502': {name:'Lonsdale Rental (Precon)', city:'North Vancouver', type:'14-storey purpose-built rental, preconstruction', team:['tm','jl','ar','dc'], models:false,
+    budget:[['01 General Requirements',1800000,0,0],['03 Concrete',8600000,0,0],['09 Finishes',5200000,0,0]],
+    rfis:[{n:'RFI-003',t:'Geotech report revision – shoring design basis',to:'dc',by:'tm',due:'2026-10-21',st:'Open',imp:'Schedule',loc:'Site',dwg:'S-001',x:420,y:300}],
+    si:[],cos:[],ci:[],
+    reviews:[{n:'DR-001',t:'Development Permit set – coordination review',sheets:['A-100','S-001'],due:'2026-10-23',st:'In review',bb:'',rv:[{id:'dc',st:'Reviewing'},{id:'tm',st:'Reviewing'}],cm:[]}],
+    dwgs:[['A-100','Site plan (issued for DP)','Rev 1','2026-09-05',''],['S-001','Structural general notes','Rev 0','2026-09-18','']],
+    files:mkFiles('LR').filter(f=>/Contract \(|Geotech|Survey/.test(f.n)), assets:[]
+  }
+};
+Object.values(PROJECTS).forEach(p=>{p.modelFiles = p.models?SAMPLE_MODELS.map(m=>({...m,on:true,status:'Loaded'})).concat([{key:null,file:'MEP-Federated.nwd',disc:'Federated (Navisworks)',color:'#6d6e71',status:'Needs conversion'}]):[]});
+
+let state = {proj:'TL-2401', tool:'home', as:'tm', q:'', f:'all', folder:'All files', sheet:null, vb:null, focus:null, placing:false, sel:null, isolate:false};
+try{const s=JSON.parse(localStorage.getItem('sb-ui')||'{}'); if(PROJECTS[s.proj]) state.proj=s.proj; if(s.tool) state.tool=s.tool;}catch(e){}
+const save=()=>{try{localStorage.setItem('sb-ui',JSON.stringify({proj:state.proj,tool:state.tool}))}catch(e){}};
+const cur=()=>PROJECTS[state.proj];
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const overdue=r=>(r.st==='Open'||r.st==='In review') && d(r.due)<TODAY;
+const who=id=>{const p=P(id);return p?`${esc(p.name)}${p.ext?'<span class="ext">EXT</span>':''}`:'—'};
+function pill(st,od){if(od)return '<span class="pill p-over">Overdue</span>';
+  const m={Open:'p-open',Issued:'p-open','In review':'p-open',Reviewing:'p-open',Answered:'p-pend',Acknowledged:'p-pend',Returned:'p-pend','Pending owner':'p-pend','Pending pricing':'p-pend',Planned:'p-pend','Needs conversion':'p-pend',Missing:'p-over',Installed:'p-open',Ready:'p-open',Closed:'p-done',Complete:'p-done',Approved:'p-done',Resolved:'p-done',Commissioned:'p-done',Loaded:'p-done'};
+  return `<span class="pill ${m[st]||'p-open'}">${esc(st==='Returned'?'Returned with comments':st)}</span>`}
+function linkChip(l){if(!l)return '<span class="muted">—</span>';
+  return l.kind==='model'?`<span class="chip" data-go-model-link="1"><i></i>3D model</span>`:`<span class="chip" data-go-sheet-link="1"><i></i>Sheet ${esc(l.sheet)}</span>`}
+
+const TOOLS=[['home','Overview','Project'],['rfis','RFIs','Project'],['si','Site instructions','Project'],['ci','Coordination issues','Coordination'],['reviews','Drawing reviews','Coordination'],['dwgs','Drawings','Documents'],['models','Models','Documents'],['files','Files','Documents'],['cos','Change orders','Financials'],['budget','Budget','Financials'],['assets','Asset register','Closeout'],['team','Team & access','Admin']];
+function counts(){const p=cur();return {rfis:visible(p.rfis).filter(r=>r.st==='Open').length,ci:visible(p.ci).filter(r=>r.st==='Open').length,reviews:visReviews(p).filter(r=>r.st!=='Complete').length,si:visible(p.si).filter(r=>r.st!=='Complete').length,cos:p.cos.filter(r=>r.st!=='Approved').length,assets:p.assets.length,team:p.team.length,dwgs:p.dwgs.length,models:p.modelFiles.length,files:p.files.length}}
+function rail(){const c=counts();let g='',h='<div class="brand"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABtsAAAEsCAYAAACi1gwWAAAACXBIWXMAAC4jAAAuIwF4pT92AAAgAElEQVR42u3dzZHrSJag0RKBIlAEihAiUASKwGUtowUoM256z0WtakURKAJFgAJtRmvrPTppyXj5Mt5P8O+6X3c/MDuzmZnKTICkA/cLAP84/+///c9//fd/5n/+698Aqf2x/QMAAAAAADK5/B+z4AaIbQAAAAAA8GBsE9wAsQ0AAAAAAJ6IbYIbILYBAAAAAMATsU1wA8Q2AAAAAAB4IrYJboDYBgAAAAAAT8Q2wQ0Q2wAAAAAA4InYJrgBYhsAAAAAADwR2wQ3QGwDAAAAAIAnYpvgBohtAAAAAADwRGwT3ACxDQAAAAAAnohtghsgtgEAAAAAwBOxTXADxDYAAAAAAHgitglugNgGAAAAAABPxDbBDRDbAAAAAADgidgmuAFiGwAAAAAAYtuTm+AGiG0AAAAAAIhtghsgtgEAAAAAQPnYJrgBYhsAAAAAAGKb4AaIbQAAAAAAUCe2CW6A2AYAAAAAgNgmuAFiGwAAAAAA1IltghsgtgEAAAAAILYJboDYBgAAAAAAdWKb4AaIbQAAAAAAiG2CGyC2AQAAAABAndgmuAFiGwAAAAAAYpvgBohtAAAAAABQJ7YJboDYBgAAAACA2Ca4AWIbAAAAAADUiW2CGyC2AQAAAAAgtglugNgGAAAAAIDYJrgBYhsAAAAAADQX2wQ3QGwDAAAAAEBsE9wAsQ0AAAAAALFNcAPENgAAAAAAaC62CW6A2AYAAAAAgNgmuAFiGwAAAAAAYpvgBohtAAAAAADQXGwT3ACxDQAAAAAAsU1wA8Q2AAAAAADENsENENsAAAAAAKC52Ca4AWIbAAAAAABim+AGiG0AAAAAAIhtghsgtgEAAAAAQHOxTXADsQ0AAAAAAMQ2wQ0Q2wAAAAAAENsEN0BsAwAAAABAbBPcALENAAAAAABGim2CG4htAAAAAAAgtglugNgGAAAAAIDYJrgBYhsAAAAAAGKb4AaIbQAAAAAAMFJsE9xAbAMAAAAAALFNcAPENgAAAAAAxDbBDRDbAAAAAAAQ2wQ3QGwDAAAAAICRYpvgBmIbAAAAAACIbYIbiG1+tAEAAAAAENsEN0BsAwAAAABAbBPcALENAAAAAACxTXADxDYAAAAAABDbBDcQ2wAAAAAAQGwT3ACxDQAAAAAAsU1wA8Q2AAAAAADENsENENsAAAAAAEBsE9xAbAMAAAAAALFNcAOxDQAAAAAAxDbBDRDbAAAAAAAQ2wQ3QGwDAAAAAEBsE9wENxDbAAAAAABAbBPcQGwDAAAAAACxTXADsQ0AAAAAAMQ2wQ0Q2wAAAAAAENsEN0BsAwAAAABAbLMJbiC2AQAAAACA2Ca4gdgGAAAAAABim+AGiG0AAAAAAIhtghsgtgEAAAAAILbZBDcQ2wAAAAAAQGwT3EBsAwAAAAAAsU1wA7ENAAAAAADENsENENsAAAAAABDbBDdRBMQ2AAAAAADENpvgBmIbAAAAAACIbYIbiG0AVLX8w9vV+yf7Pxw/+fz/Zn39/7uyLwEAAACxTXADxDaAXl1i2OYayC7RbIo63br+7++u/zwRDgAAABDbBDdAbANoMq5t/3C4BrDa28ddcW+ODQAAACC2CW6A2AaQ0eWRjvskce2ru9/21zvfFo4bAAAAILYJbiC2QbwjTfBZLe+tkcD2VXhbO5bF7QJ/C/YdhOtSv5tr6/NPHXxHv9kE7eOV3z37c7DzffuYEr+tHzb2sfXP+scNVuZI8eu/2Ca4gdgGf2drY/NZLeNyN9jlEZFTZ5+fy3/P++xut1L2wcez5eN4KPi5bzlMvgXuF7HtL+9B+/g04O/tMfAz++azmv583z6mxG/rx/ZuH1v/rH9UPp+2Xdd/Q0XBDcQ2ENvENj5bzn/+VeK599Oza4BYOubhfy0cubV8x1bJ79hkCPbTbes7WmQ/72fDRsNGsQ2/rWKb9c/6Z/0T28Q2m+AGYhsuvm1i2wAWc/xdSFk30S023kZuu0b3y6rC57zVz3jk4MYjicoNhEd61Jlho9gGYptjZP2z/oltYptNcAOxDRffNrFtwMh2ucg8j36aNnu8ZJTIR5GeGt0n2wqf8VaHPZHfed/PcsPG80Bx07BRbAOxzTGy/ln/xDaxzSa4gdiGi2+b2DaQ9dzfO9lecUG89tnw3rZghwqf7RYfZeR9bf0MGz/i+Ah/0GDYKLaB2OYYWf+sf2Kb2GYT3EBsw8W3TWwbwDL4YqiH7Th7tOQro27k1mIcrXEnaYt3cnlfW1/Dxlajr2Gj833nqYhtjpH1z/onttnENsENxDYQ28Q2fggfZx+jm+PExmfmJY8qjdxae2/bquJnurXHGHlfW3/DxnmA31XDRrENxDbHyPpn/RPbxDab4AZiGy6+bWJbx8Fj7+Pz0HaYvcvtWafA49Pae9u2FT/Lrd3NFfWHAd7XVnfY2Pv7awwbxTYQ2xwj65/1T2wT22yCG4htuPi2iW0dWgXHjhG20+xOmGfsgo9PSzH0UPFzfGjsd8t+6HPY+PGb2usfMRg2im0gtjlG1j/rn9gmttkENxDbcPFtE9s647GRLzxlm9t8P5j3tnlf2/efYXcAel9bhmHjZev1/TWGjWIbiG2OkfXP+ie2iW02wQ3ENlx828S2jmx8XEI273Hz3rYW39f2sbVyh+bBPuh+2Njr76lho9gGYptjZP2z/oltYptNcAOxDRffNrHNhaOto7jjvW3e1/Z5a+WuLu9rG2PN6PH9NYaNYhuIbY6R9c/6J7aJbTbBDcQ2XHzbxLYO7H1Mimx7nzXvbbvTIcHn9tjAfvK+trH+QKO399cYNoptILY5RtY/65/YJrbZBDcQ23DxbRPbhDab4Oa9bUHOfke9r82wsfvfUsNGsQ3ENsfI+mf9E9vENlu24CaygNiG2GYzxGjoYlFwo+bvbPZHe64SfWazDyy8r23M9aOX99cYNoptILY5RtY/65/YJrbZsg1u/vmvf++FFhDbENtshhg32DR0DKfrxdjxGqreP/n4vzs19N+08RmsfhGe/b1t20Sf1+zDOe9rG3PY2Mv7awwbxTYQ2xwj65/1T2wT22yZQtvHF0JwA7ENsc1miNHwyfN0Pa/ZPHGRtJz/fETge/BFnODW/kAj83svMn12M7+3zfvaxr4zuof31xg2im0gtjlG1j/rn3mB2GbLFtoENxDbENtshhg3DKbPyY7R5WJxe41kEf/Ni2vYOiT77+7lr1JbvtBbW2Oa/y2NvANQEG/jMcStP5rXsFFsA7HNMbL+Wf/ENrHNlvmHVXBDbAOxzWaI8ZPolOVRi5fQtAsMbL/bB5fh/JRkP0xz+3+V6r1tY1zgZg2T+8D/5qXvXzPv/Gw5jBo2im0gtjlG1j/rn2sRsc2WNbQJbohtFkfENpshRuGh9D2R7T1JYNokiW4eVee9bdkHOZnDZNR3ePLda+oz2vKdwoaNYhuIbY6R9c/6J7aJbbbMoU1wQ2wDsc1miPGddYJjkSWy/Sy61X605tZn1HvbCg0fegqTywzXW76XqT6jLd4pbNgotoHY5hhZ/6x/I8S2o337F0PFBkOb4IbYBuEnINlFby3sA5/VPy++asak45z/cWyXfbSruI/Os0fWeW9b/j/myDbI2QT+t3pfW3vDxlYjqWGj2AZim2Nk/bP+iW1im62lH0/BDbENDAgMCIZ1qHju0todW+uKYdLFx69FHpNsj0fM/NiWbGEy8tG44nebw8YWQ6lho3NpENscI+uf9U9sE9tsrf2VguCG2AYGBAYEHh9ZaGv5/QGXIftJnBwmGGd7PGLmIU62MDkF/XdOvnNNf05bW38MG51Lg9jmGFn/rH9im9hmaym0CW6IbWBAYEAw5OMjpwrnLa2+N+DzvttX2HfnDvZdhG3wfs+0z49z3i1ThFq2cO1l2Fhta2kdMmx0Lg1im2Nk/bP+iW1im6210Ca4IbaBAYEBgYtBF3hpHlNn0H+7VfA+Xw/0u/3sluXxipvA/8aN71zzw8aWfksNG51Lg9jmGFn/rH9im9hma/kHUnBDbAMDAgOCrl0G4qXfPdZbaKsZ3JY+wz8Y4b1tb3P+bTPA99L3r49hYyvh1LDRuTSIbY6R9c/6J7aJbbbW/xJBcENsAwMCA4JulQ5EvYa2WvvThciPRnhvm7+Wvl3UI3In37Wuho0tvL/GsNG5NIhtjpH1z/ontoltth4uYgU3xDYwIDAg6PKutpLbNI/xnrFj4f3qIvHvRnhv23HOv02d/8Z5jGtfw8YW/hjEsNG5NIhtjpH1z/ontolttl4u8AQ3xDYwIDAgcBfWg1sLfzX5Kos57m4aFyNfi35v22aA3+xXbbUfs7ju/HNg2DhWRDVsdC4NYptjZP2z/oltYputpx9BwQ2xDQwIDAi6CUIl39U22mB6VfjccOkz/TfnHs/DCwSk3r73O985w8aO1ivDRufSILY5RtY/65/YJrbZevtrA8ENsQ0MCAwIXADesR3s4/7PD5OJvGuz9uMRIwLSsdPv/qnTz4Dfwdgt653Yho3OpUFsc4ysf9Y/sU1ss/U4SBHcENvAgMCAoGmlHnN4uWhbDLyfjwXPExc+199sgvd1zbuaTkGfnXPQ97/m3bvitmHjo1vG99cYNjqXBrHNMbL+Wf/ENrHN1utFneCG2AYGBAYETSr5GLr14Pu65OMktz7b3yyD93Wtx+xEBKTT9X/7ELSvVh3+zm18x7ofNma8/jZsdC4NYptjZP2z/oltYputx9AmuCG2gQGBAUGzDoXOX5wkxz3273fRhPi7N2udm0cEpN31f3vbWQT2vjbDxt7CqmGjc2kQ2xwj65/1T2wT22y9hjbBDbENDAgMCJqzKHgO4+Llr31+LrTPV/b3N/vA/Tx1FJA+7j6Nuguz1nvbvK/NsPEVW6b31xg2OpcGsc0xsv5Z/8Q2sc3Wc2gT3BDbwIDAgKApG+cwXV9w7+zrYp/1Gnc3nYJ/n3t5b5v3tRk2vnLL8v4aw0bn0iC2OUbWP+uf2Ca22Ua5kBPcENvAgMCAwCMkr5s7rOrc3eaum78sg/f1psJnKPpCtpf3tnlfm2Fjj9fmho3OpUFsc4ysf9Y/sU1ss40Q2gQ3xDYwIDAg8AhJJ8fFHwEodP7e1NH5ekRA+jxMi3pv23tH37Wl79WQw8YModWw0bk0iG2OkfXP+ie2iW22UUKb4IbYBgYEBgSprQudy6zt6yp3Wn1sW/v6m33gfi59F2FEQHor9BktfcEc9b62k+9UqmHj5TtY6n2Y81z//TWGjc6lQWxzjKx/1j+xTWyzjRTaBDfENjAgMCAY+s4qjzGs/xhPFyflAnPJu5xOhX6bpw7WgajNOxFzDRsv/9ubwtfrNd9fY9joXBrENsfI+mf9E9vENttooU1wQ2wDAwIDguEeqWcYfZtSF8b2dZlHp24a/u/41UVs1N2ApYYZb4HH2127+YaN0XewZrpuN2x0Lg1im2Nk/bP+iW1im23E0Ca4IbaBAYEBwVDR4WPzvrCvlXjsiwvH+EcKljyHL/G+tuggXGpwFzncWvg+pRw2LoK/5zVDu2Gjc2nn0ohtjpH1z/ontoltNqFNcENsAwMCA4JESryvzSMkb1Pir1ANSco8PnVq+L/hV8OFZdC+KvW+s2Pj//6GjY/9zq3m/t9fY9joXBrENsfI+mf9E9vENtvIoU1wQ2wDAwL7d4iL8nn2CMlMj5J0gVIuNC8L/DecCv8uRz1ydtHweub3LfewsdQflXwOsCXvdjRsdC4NYptj9LPjs7H+Wf/ENrHNNlBoE9wQ28CAgOqOBY6z9xnleaTn2X4utr83Df77f3UBu2/0N+LN79vQw8boO1lrX9MbNjqXBrHNMfrV8dlb/6x/YpvYJrQNSHBDbAMDAqo4O86plHi/wtJ+LrK/o8/rI/5a+ashWtQdQtF3h0UOtryvrY1hY6nf15LB3bDRubRzLMQ2x+ir47Ow/ln/xDaxTWgT3EBsAwMC+riTygnxfUrcfeHiscz+noL/3SP+UnlV6Tcj+r1nx0b/vQ0bXzsMXs59vr/GsNG5NIhtjtHvjs/K+mf9E9vENqFNcAOxDQwIaPfRah+b9xnVv1vJoKT8nVofW+RdhFPAYKTm3YCLBtcyv29tDRtLfOd/FmSj7340bHQuDWKbY2T9s/6NMGc4X497615y96fYJrQJbohtYEBgQDBe2NnYz3dZCaBd/c5Fff6XAf+uhxv/2VF3A0a9+yzyjwq8r629YWOpO4hLXu8bNjqXBrHNMbL+Wf9G+6PelreX/JaKbUKb4IbYBgYEBgRjXZC7UMn5vfP4jXIX6lHn+hGhfHvjP3vd2L6K/J3zvrY2h42Rd2jW+MMTw0bn0iC2OUbWP+uf2Ca2CW2+fIIbYhsYEFDRzjFOKfoiWGwrN/SYgv6d9wH/rre+W2PR2L6KGsR4X1vbw8bL3aG9vL/GsNG5NIhtjpH1z/ontoltQhuCG2IbGBBQ0TH4+J7t45THxXev7MXgMuDfear8XT01tK+iBkoex9r2sDHyLs3fBdrFbNjoXNp6jtjmGFn/rH+ur8Q2sU1oE9wQ28CAwIBA1LljcweVOw791r3+8TnLgH/Hw5xjUPTqfRX5DkTva2t/2NjL+2sMG51Lg9jmGFn/rH9im9gmtCG4IbaBAQEVTcHHV2zLOSjx3St7sf7q8/9NwL/jds5xAf3qfbUNPK7e19bHsLHEo3ujo7Jho3NpENscI+uf9U9sE9uENgQ3xDYwIKDj4+sxa/kCwce2sp+LDT6mF/+77pN8HlrYV4egf0/va+tr2Hi5W7Tl99cYNjqXBrHNMbL+Wf/ENrFNaENwQ2wDAwI6Pr4uyPNenLiALPe4wXl+7bvIXn1H6qPvVjw2sK+8r82w8VYtv7/GsNG5NIhtjpH1z/ontoltQhuCG2IbGBAgtiG2pRD5l72vemzOMuDf7TDnGhZtX7SvvK/NsPFerb6/xrDRuTSIbY6R9c/6J7aJbUIbghtiGxgQILYhtqVwaOCaYJMobkV9Tg8v2lfe12bYmG1wFxXiDRudS4PY5hg9e3xO1j/rn9gmtgltgpvghtgGBgSIbS5OXEBmjzPTi/4d9wH/bqtkvyHnF+0r72szbHzEYm7v/TWGjc6lQWxzjJ49Pkvrn/VPbBPbhDYEN8Q2MCBAbHNx4gIy+2MH5/k17yKbkkXAqKC1esG+OvtdM2xsZED07PtrDBudS4PY5hi94visrX/WP7FNbBPaENwQ28CAALHNxYkLyFfI/N62VcLrlqi7AbcJ95XvzjjDxhID61d+Fw0bnUuD2OYYver47Kx/1j+xTWwT2hDcENvAgACxzcWJC8isjx6c5+ffRRYRtjIGwKz7yro11rAxeoj3yu+jYaNzaRDbHCPrn/VPbBPbhDYEN8Q2MCBAbENsSyMy0jz7LrKIEPiKR1ueE64P+6B/p6PvyFDDxlbe32bY6FwaxDbHyPpn/RPbxDahDcENsQ0MCOj4+O7s43TB52Nb2c/FHz/47H5/9dBjetE+i7ob8Jkhx2TIaNjY6LDokffXGDY6lwaxzTGy/ln/xDaxTWhDcENsAwMCKpqCj6+7QHIOSnz36n0vHn0X2SrxNUxUHH70InRp8GLY2OBv8jPfTcNG59IgtjlG1j/rn9gmtgltCG6IbWBAQEXRz+MX2x6z892rah+43x99F1nG97VF3w346O/HxvfGsLHB9fKZ76dho3NpENscI+uf9U9sE9uENgQ3xDYwIKDj2Ha2j9Ne1NrPdWLNo9+JrO9ri74bMFMs9ccDYw8bM7+/xrDRuTSIbY6R9c/6J7aJbUIbghtiGxgQUJE7qHI6BR8T0aDeYwjn+bH3tmV9X1t04Hpk0BEV/gwYxx421hgc3fr+GsNG59IgtjlG1j/rn9gmtgltCG6IbWBAQMcX5C5Ucn7vxLZ6weay3fvetlUD1zNRdwPuEoVSv2WGjaXWzXu/q4aNzqVBbHOMrH/WvxFi2+n6v926lzxhpJfYJrQJbohtYEBgQOBxebdvG/u5elgxKMlzp9Zlu/e9bdsGvpdRkeuU6DfN98KwseSjfu/5vho2OpcGsc0xsv5Z/0aIbf5otLPYJrQJbohtYEBgQOAk+L5tZz+nC6Bb+7nqcbj3vW3Z39cWfTfg4o5/h6hI6sLesPF72d5fY9joXBrENsfI+mf9E9vENqENwQ2xDQwIqGhR4Bg7Ib5PiffouXis+zjCeb7vvW2vHmqcgvZZVOhaJwh+houGjTXuQv78vV0YNjqXdi6N2OYYVT4+b9Y/xDaxTWhDcENsAwMCygzyHefnnAocj6X9XDXcXLZb7y6MGOhH3W0adTfgrf++kX88YOBi2FjqEa+PzCUMG51Lg9jmGJU8Pu/WP8Q2sU1oQ3BDbAMDAuo8e39tP6e50/BsP6e4y/DW97ZtG/o+Rn1+b70Tb22tMmysMAw+zGW3jWGjc2m/T4htjlGC43O0/iG2iW1CG4IbYhsYEFD+LxO9t63unUEuUB4TGW9ujZ4Rg/xF4D6LujPzln/nne+MtafCsPHy2ZzmctvP3l9j2OhcGsQ2x6jG+ne2/iG2iW1CG4IbYhsYEFAmKHxsk/18k32BY2FIkudOw1ve29bK+9qig9emYujznTFsrPG416++xwvDRufSzqUR2xwj65/1T2wT24Q2BDfENjAgMCAY69GFt4aF0ZX461AXjjnu1LpsX723LeIiNfou06h4v6/4O+Y7Y9hY65Gvt34nDBudS4PY5hhZ/6x/YpvYJrQhuCG2gQEBnQeFUkN+j5D0nWvpTq3L9tV72yKGMdHvT4yKXl/dHet9bYaNGYbBtd7fZtjoXBrENsfI+mf9E9vENqENwQ2xDQwI6Dwo3DosH12Ji1QXJ7kes/rVe9siBgiLAvssKt4vK/yG+c4YNt4bm6eC84uP99cYNjqXBrHNMbL+Wf/ENrFNaENwQ2wDAwI6Dwrfb2v7+qeWhfb/1r5O95jVVcHf31OhfVbjvW3e12bYmOW4lX5/zTTHPoLYsNG5NH5brYvWP+sfYpvYJrQhuCG2gQEBSYKCk+P6dxZ+FXao85jVbcEL1FKPco26uN5X+P3ynTFsfETp99dEboaNzqXx2yq2Wf+sf4htYpvQhuCG2AYGBNyh1LP2Da9/DAXnAvvdYzxzxtBDwUHMuvG141eP3VwX/udh2JhpTTVsdC5tHyO2OUbWP+uf2Ca2CW0IbohtYEBgHyeycf7V5VDkY9vZ1+kuFn8XdI4B/6xFwX12DNpfq4Ix9OCzb9j45B9STIaNOJdGbMP6Z/1z/SS2jRDbDHoQ3BDbwICA8o+S/NXA3F1t9vmov4WrAv+80hemUYOkbcGw5x2Hho3PKv3+GsNG59Igtln/rH/WP7FNbBPaENwQ28CAgARKPfbDSXL84wm/3072ddo7tX4WdSIuTksPX6IusA8F1ymB2rDxFVp/f41ho3Np/LaKbdY/6x9im9gmtCG4IbaBAQF3Whc8J1sPvq9L/sWnO3RyD0YOBf5Zb52sH+dCF/Le12bY+Ep7w0bn0s6lEdsYcP07WP/ENrGt79gmtCG4IbaBAQG/NxU6L7sMsxcD7+djwXPghc912gvGn4WdYye/tVEDllWBgZX3tRk2vvqRwSfDRufSzqUR2xhw/Zusf66dxLY+Y5vQhuCG2AYGBNS/SDfQLruPnQO38Xu4Cvzn1LoojXp80LZAtHY3qGFjxN3M57m9zbDRuTR+W8U2618rT/Ow/oltYpshA4IbYhsYEJDuLxBLDgQ3g+3f0hecS5/pJu5G3AZemL539lk/FlijvK/NsDHCxrDRubRzacQ2x2jA47O1/oltYls/sU1oQ3BDbAMDAu6zL3iudh5osF36USoehdfOcOQQ+M+oOSw4B64db4G/ST7vho09rK+Gjc6l8dsqtln/rH/WP7FNbBPaENwQ28CAgIqWhc/ZpnmM94odC+9XF4nt3JX4EXhOnf3OHgI/21HDKpHasDH6jy5aen+bdcS5NH5bxTbrn/UPsU1sE9oQ3BDbwICAhv768NR5cCu9P12ItHWn1hx0UVr7cxD12KD32fvaDBvbHQa39P42w0bn0vhtFdusf9Y/xLbBY5vQhuCG2AYGBDx/d1vpi6Feg1uNx6YsfYabulOr16HLam5v8742w8YSNoaNzqWdSyO2OUbWP+uf2Ca2ZY9tQhuCG2IbGBDQxgX7CMGtRmhzPtzenVo9DwqmhvaX97UZNva+Phg2OpfGb6vYZv2z/ln/xDaxzWABwQ2xDQwIKGxRaVDeQ3BbVLqQPM9jvP/OnVrthKN9Q/vM+9oMG0uvE9nfX2PY6Fwav61im/XP+ofYNmBsE9oQ3BDbwICA11tXDAWtPs5tWfEC0vum4rXyroks4aiVxwX5/hg21gr4mX9TDBudS+O3VWyz/ln/ENsGi21CG4IbYhsYEBCn5nuqWht+ryteOLr46P/70OJ3Z9lQbPO+NsNGQdqw0bk0flvFNuuf9c/6J7YNG9uENgQ3xDYwICD+UR81//LweB3YZ99Hu4r76NzAPupFK+9tyxSOpgb2l/e1GTZ63KphY4vn0u8D2PgciW2OkfXP+ie2iW3xsU1oQ3BDbAOxjb4fJ/n5AjLj+8g2c/3HoHj8XdnH3ghHfQxSvt+8r82wsfYfbGR8f41hY/5z6RE2w1WxzTGy/ln/xDbrQXBsE9oQ3BDbQGxjvIH5OVF0u0S2DHfsiATu1Mr+mdjM+TfB2rAxQ8jP9v4aw0axTWzz2yq2Wf+sf2SJbbZPwzShDcENsQ0MCMS2th8nmeUvDy8XZJfHNi4r7INtotgyzTnv9hOehaPP35vsm/e1GTa6i9ywUWwT2/y2im3WP3+YZf0T24aKbUIbghtiG4ht+MvD77fTNS5EhbfF9QLwkOy/+ywQGAg0FI5OifeX97UZNmayS/TdMGwU28Q2v61im/VvxD9ms/6JbUPENgHr240AAAiDSURBVKENwQ2xDcQ2nDz/bpuu54ybJy6SLtFufb1gPSb+b934LFazFI6aDgiuMw0bs8sSpw0bxTaxzW+r2Gb9G/EpKtY/sa372OYCCMENsQ3ENtzZ82iAO17trxei3/v4vzs19N8ktNU3Jf1sZH2H39r3CcPGu4J+hrvIDRvFNrHNb6vYZv2z/iG2dRbbhDYEN8Q2ENvIZ+sUt8rm3Nijbn63bZPur8zvbVv6PBs2CtSGjWKb2Oa3VWyz/ln/rH9iW++xzTABwQ2xDcQ2BAebc2N3d962ZX6PX8a7RyefZcPGxGo/ftWwUWwT2/y2im3WP+sfYlsnsc0wAcENsQ3ENgQ3m3PjrI+5EY7aGpz4Xhk2tqhmpDZsFNvENr+tYpv1z/qH2NZBbHPRg+CG2AZiGy4cbX9uO5+xlCbhqPkL743PsWFjA2G/1vtrDBvFNrHNb6vYZv2z/iG2NR7bhDYEN8Q2ENvwWD2bGOARN/19VrJtS59jw8YG1Hp/jWGj2Ca2+W0V26x/1j/EtoZjm9CG4IbYBmIbbZ9Yn536vmQ7Xy8wfa4MAHoKR8dE+2vyGTZsFPcNG8U2sc1vq9hm/bP+Wf/Eth5jm9CG4CZ0iW0gttG+1Vz3Gfs9bKfrfvR5ym0hHDX9yFnXn4aNrSm9tho2im1im99Wsc36Z/1DbGswtrnQAcFNbAOxjb4ixN4p8EPb4br/fI5c/PcYjjJdfHtEq2Fjay53r5a8e9ywUWwT2/y2im3WP+sfYltjsU1oA8FNbAOxjX4fs+exkrdtZ8N/j7YZJBxl2ZY+v4aNja6rho1+78Q2xDbHyPpn/RPbxDahDQQ3sQ0MCMS2wSznXO9pyjpIMvh34T9KODok2F+Tz65ho/1n2Ci2iW1+G/y+Wv/8kZv1T2zrJbYJbSC4iW0gtjFWlJicFv9tO1/3i89H249MFY7us02wz1yLGja2rsQfsRg2im1im99Wsc36l83J+ie22X48yXBxA4Kb2AYGBPbxmGHiffZoyfN1P3g3m4v+EcPRKsF30CNbDRt7WE+j11LDRrFNbPPbKrZZ/zI+NcX6J7aJbUIbCG5iGxgQiG18NyTcD3pevJ89MtLgRDiqHdx9Bw0bDbMMG8U2sc1vq99X65/HuFv/xLamY5vQBoKb2AYGBGIb3/9l4m7u/063s8jmglI4+pua722bfGYNG+1Lw0axTWzze+D31fpnX1r/xLaWY5vQBoKb2AYGBGIbv7rTbTv39063afa4SL+Xsdup0f1V871trksNG3tzNGy0NohtiG3WP+uf9U9sGyu2AYKb2AbtnbxGso/51cn5ZRje6t1uH3exrR3LoewK/Gb+zLbR/bWqtL+OvpspbAKP72bA/bkI2pcrn9X059Ij2PkcpfhtHfX31fpn/aOt8/xh+KCB4Ca2AXCvdSPh7SOwbWZ3sQEAAABB7AQQ3MQ2AJ79C7nLXTyHJPHt8hdl77PHjAAAAABiGwhuiG0Ajca3zTV4XcLXFHjX2uV/f3f953msCAAAACC2geCG2AbQreX1brO3a4j73n7+8Xnnn//frK//f0U1AAAAQGwDwQ2xDQAAAAAAsQ0Q3MQ2AAAAAADENkBwE9sAAAAAAEBsA8FNbAMAAAAAALENBDfENgAAAAAAxDZAcBPbAAAAAAAQ2wDBTWwDAAAAAACxDQQ3sQ0AAAAAAMQ2ENzENgAAAAAAENtAcENsAwAAAABAbAMEN7ENAAAAAACxDRDcxDYAAAAAABDbQHAT2wAAAAAAQGwDwU1sAwAAAAAAsQ0Q3MQ2AAAAAADENkBwE9sAAAAAABDbAMFNbAMAAAAAALENBDexDQAAAAAAxDZAcBPbAAAAAAAQ2wDBTWwDAAAAAEBsAwQ3sQ0AAAAAAMQ2ENzENgAAAAAAENtAcBPbAAAAAABAbAMEN7ENAAAAAACxDRDcxDYAAAAAAMQ2QHAT2wAAAAAAQGwDwU1sAwAAAAAAsQ0YNLg51gAAAAAAiG2A4Ca2AQAAAAAgtgGCm9gGAAAAAIDYBghuYhsAAAAAAIhtQM/BzbEFAAAAAEBsAwQ3sQ0AAAAAALENENzENgAAAAAAxDZAcBPbAAAAAABAbAN6Dm6OJQAAAAAAYhsguIltAAAAAACIbYDgJrYBAAAAACC2AYKb2AYAAAAAAGIb0HNwc+wAAAAAABDbAMFNbAMAAAAAQGwDBDexDQAAAAAAsQ0Q3MQ2AAAAAAAQ24Ceg5tjBQAAAACA2AYIbmIbAAAAAABiGyC4iW0AAAAAAIhtAE0EN8cHAAAAAACxDRDcxDYAAAAAAMQ2QHAT2wAAAAAAENsAmghujgkAAAAAAGIbILiJbQAAAAAAiG2A4Ca2AQAAAAAgtgE0EdwcBwAAAAAAxDZAcBPbAAAAAAAQ2wDBTWwDAAAAAEBsA2giuNn3AAAAAACIbYDgJrYBAAAAACC2AYJb2eBmnwMAAAAAILYBgpvYBgAAAACA2AZQNrjZ1wAAAAAAiG2A4Ca2AQAAAAAgtgGUDW72MQAAAAAAYhsguIltAAAAAACIbQBlg5t9CwAAAACA2AYIbmIbAAAAAABiG0DZ4GafAgAAAAAgtgGCm9gGAAAAAIDYBlA2uNmXAAAAAACIbYDgJrYBAAAAACC2AZQNbvYhAAAAAABiGyC4iW0AAAAAAIhtAGWDm30HAAAAAIDYBvBgcLPfAAAAAAAQ2wAeDG72GQAAAAAAYhvAg8HN/gIAAAAAQGwDeDC42VcAAAAAAIhtAA8GN/sJAAAAAACxDeDB4GYfAQAAAAAgtgE8GNzsHwAAAAAAxDaAB4ObfQMAAAAAgNgG8GBws18AAAAAABDbAB4MbvYJAAAAAABiG8CDwc3+AAAAAABAbAN4MLjZFwAAAAAAiG0ADwY3+wEAAAAAgGz+Hwr8CIQxVgqdAAAAAElFTkSuQmCC" alt="Townline"><span>Sitebook</span></div>';
+  TOOLS.filter(t=>canSee(t[0])).forEach(([id,label,grp])=>{if(grp!==g){h+=`<div class="navgroup">${grp}</div>`;g=grp}
+    h+=`<button class="nav ${state.tool===id?'on':''}" data-tool="${id}"><span>${label}</span><span class="ct">${c[id]??''}</span></button>`});
+  document.getElementById('rail').innerHTML=h}
+function selects(){
+  document.getElementById('proj').innerHTML=Object.entries(PROJECTS).map(([k,p])=>`<option value="${k}" ${k===state.proj?'selected':''}>${k} · ${esc(p.name)}</option>`).join('');
+  document.getElementById('as').innerHTML=PEOPLE.map(p=>`<option value="${p.id}" ${p.id===state.as?'selected':''}>${esc(p.name)} (${p.ext?'external':'Townline'})</option>`).join('');
+}
+// external users only see items assigned to them
+const me=()=>P(state.as);
+function visible(list){if(!me().ext) return list; return list.filter(r=>r.to===state.as||r.by===state.as)}
+function visReviews(p){if(!me().ext) return p.reviews; return p.reviews.filter(r=>r.rv.some(x=>x.id===state.as))}
+function canSee(tool){if(!me().ext) return true; return ['home','rfis','si','ci','reviews','dwgs','models','files'].includes(tool)}
+
+function view(){
+  rail(); save();
+  const v=document.getElementById('view'), p=cur();
+  if(!canSee(state.tool)){state.tool='home'}
+  const r={home,rfis,si,ci,reviews,dwgs,models,files,cos,budget,assets,team}[state.tool];
+  v.innerHTML=r(p);
+  if(state.tool==='dwgs') attachSheet();
+  if(state.tool==='models') mountViewer();
+}
+function hdr(t,s,btn=''){return `<div class="head"><div><h1>${t}</h1>${s?`<p class="sub">${s}</p>`:''}</div>${btn?`<div class="btns">${btn}</div>`:''}</div>`}
+
+function home(p){
+  const open=visible(p.rfis).filter(r=>r.st==='Open'), od=open.filter(overdue);
+  const pendCO=p.cos.filter(c=>c.st!=='Approved'), pendAmt=pendCO.reduce((a,c)=>a+c.amt,0);
+  const bud=p.budget.reduce((a,b)=>a+b[1],0), com=p.budget.reduce((a,b)=>a+b[2],0);
+  const ext=me().ext, revs=visReviews(p).filter(r=>r.st!=='Complete');
+  const mine=[...visible(p.rfis).filter(r=>r.st==='Open').map(r=>({...r,k:'rfis'})),...visible(p.ci).filter(r=>r.st==='Open').map(r=>({...r,k:'ci'})),...visible(p.si).filter(r=>r.st==='Issued').map(r=>({...r,k:'si'}))].filter(r=>r.to===state.as);
+  const myRev=p.reviews.filter(r=>r.st!=='Complete'&&r.rv.some(x=>x.id===state.as&&x.st==='Reviewing'));
+  return `${hdr(esc(p.name),`${state.proj} · ${esc(p.city)} · ${esc(p.type)}`)}
+  <div class="tiles">
+    <button class="tile" data-tool="rfis"><div class="k">Open RFIs</div><div class="v">${open.length}</div><div class="n">${od.length?`<b>${od.length} overdue</b>`:'None overdue'}</div></button>
+    <button class="tile" data-tool="ci"><div class="k">Coordination issues</div><div class="v">${visible(p.ci).filter(c=>c.st==='Open').length}</div><div class="n">${visible(p.ci).filter(c=>c.st==='Open'&&c.link?.kind==='model').length} linked to the 3D model</div></button>
+    <button class="tile" data-tool="reviews"><div class="k">Drawing reviews</div><div class="v">${revs.length}</div><div class="n">${revs.filter(overdue).length?`<b>${revs.filter(overdue).length} overdue</b>`:'in progress'}</div></button>
+    ${ext?'':`<button class="tile" data-tool="cos"><div class="k">Pending change orders</div><div class="v">${pendCO.length}</div><div class="n">${money(pendAmt)} exposure</div></button>
+    <button class="tile" data-tool="budget"><div class="k">Committed vs budget</div><div class="v">${bud?Math.round(com/bud*100):0}%</div><div class="n">${money(bud)} budget</div></button>`}
+  </div>
+  <div class="grid2">
+    <div class="card"><h2>In your court</h2><div class="list">${mine.length||myRev.length?mine.map(r=>`<div class="li" data-open="${r.k}:${r.n}"><div class="t"><span class="num">${r.n}</span> ${esc(r.t)}</div><div>${pill(r.st,r.k==='rfis'&&overdue(r))}</div></div>`).join('')+myRev.map(r=>`<div class="li" data-open="reviews:${r.n}"><div class="t"><span class="num">${r.n}</span> Review: ${esc(r.t)}</div><div>${pill('Reviewing',overdue(r))}</div></div>`).join(''):'<div class="li muted">Nothing assigned to you on this project.</div>'}</div></div>
+    <div class="card"><h2>Recent activity</h2><div class="list">
+      <div class="li"><div class="t"><span class="num">CI-092</span> created from the federated model by ${who('tm')}</div><span class="muted">Oct 8</span></div>
+      <div class="li"><div class="t"><span class="num">RFI-042</span> created by ${who('sk')}</div><span class="muted">Oct 7</span></div>
+      <div class="li"><div class="t"><span class="num">DR-007</span> returned with comments by ${who('mp')}</div><span class="muted">Oct 6</span></div>
+      <div class="li"><div class="t"><span class="num">S-203</span> Rev 6 published, Bluebeam session linked</div><span class="muted">Oct 1</span></div>
+    </div></div>
+  </div>
+  <p class="note">Prototype: switch projects at the top to load each project on its own. Switch "Viewing as" to an external user (e.g. Maria P.) to see what a trade partner sees.</p>`;
+}
+
+function filterBar(opts){return `<div class="filters"><input id="q" type="search" placeholder="Search number, title, location…" value="${esc(state.q)}"><select id="f" aria-label="Filter">${opts.map(o=>`<option ${state.f===o?'selected':''}>${o}</option>`).join('')}</select></div>`}
+function apply(list,keyFn){const q=state.q.toLowerCase();return list.filter(r=>(!q||JSON.stringify(r).toLowerCase().includes(q))&&(state.f==='all'||keyFn(r)===state.f))}
+
+function rfis(p){const L=apply(visible(p.rfis),r=>overdue(r)?'Overdue':r.st);
+  return `${hdr('RFIs','Requests for information, with ball-in-court and due dates.','<button class="btn pri" data-new="rfi">New RFI</button>')}
+  ${filterBar(['all','Open','Overdue','Answered','Closed'])}
+  <div class="tbl"><table><thead><tr><th>No.</th><th>Subject</th><th>Ball in court</th><th>Due</th><th>Impact</th><th>Location</th><th>Status</th></tr></thead><tbody>
+  ${L.map(r=>`<tr data-open="rfis:${r.n}"><td class="num">${r.n}</td><td>${esc(r.t)}<div class="muted">${esc(r.loc)}</div></td><td>${who(r.to)}</td><td class="num">${fmt(r.due)}</td><td>${esc(r.imp)}</td><td><span class="chip" data-go-sheet="${r.dwg}:${r.x}:${r.y}:${r.n}"><i></i>Sheet ${r.dwg}</span></td><td>${pill(r.st,overdue(r))}</td></tr>`).join('')||'<tr><td colspan="7" class="muted">No RFIs match.</td></tr>'}
+  </tbody></table></div>`}
+
+function ci(p){const L=apply(visible(p.ci),r=>r.st);
+  return `${hdr('Coordination issues','Clashes and design issues, each linked to the exact spot in the 3D model or on a drawing sheet.',`<button class="btn" data-tool="models">Create from model</button><button class="btn" data-tool="dwgs">Create on a sheet</button>`)}
+  ${filterBar(['all','Open','Resolved'])}
+  <div class="tbl"><table><thead><tr><th>No.</th><th>Issue</th><th>Trade</th><th>Assigned to</th><th>Location</th><th>Status</th></tr></thead><tbody>
+  ${L.map(r=>`<tr data-open="ci:${r.n}"><td class="num">${r.n}</td><td>${esc(r.t)}<div class="muted">${esc(r.loc)} · ${esc(r.src)}</div></td><td>${esc(r.trade)}</td><td>${who(r.to)}</td><td data-ci="${r.n}">${linkChip(r.link)}</td><td>${pill(r.st)}</td></tr>`).join('')||'<tr><td colspan="6" class="muted">No coordination issues on this project.</td></tr>'}
+  </tbody></table></div>
+  <p class="note">Click a location chip to jump straight to the issue: the 3D model flies to the clashing element and highlights it, or the drawing zooms to the pin.</p>`}
+
+function reviews(p){const L=apply(visReviews(p),r=>overdue(r)?'Overdue':r.st);
+  return `${hdr('Drawing reviews','Send a drawing package to consultants and trades, track each reviewer, and turn comments into coordination issues.',me().ext?'':'<button class="btn pri" data-new="review">Start a review</button>')}
+  ${filterBar(['all','In review','Overdue','Complete'])}
+  <div class="tbl"><table><thead><tr><th>No.</th><th>Package</th><th>Sheets</th><th>Reviewers</th><th>Comments</th><th>Due</th><th>Status</th></tr></thead><tbody>
+  ${L.map(r=>`<tr data-open="reviews:${r.n}"><td class="num">${r.n}</td><td>${esc(r.t)}${r.bb?`<div class="muted">Bluebeam session ${esc(r.bb)}</div>`:''}</td><td class="num">${r.sheets.join(', ')}</td><td class="num">${r.rv.filter(x=>x.st!=='Reviewing').length}/${r.rv.length} responded</td><td class="num">${r.cm.length}</td><td class="num">${fmt(r.due)}</td><td>${pill(r.st,overdue(r))}</td></tr>`).join('')||'<tr><td colspan="7" class="muted">No reviews match.</td></tr>'}
+  </tbody></table></div>`}
+
+function si(p){const L=apply(visible(p.si),r=>r.st);
+  return `${hdr('Site instructions','Written direction to trades, tracked to acknowledgement and cost.',me().ext?'':'<button class="btn pri" data-new="si">Issue instruction</button>')}
+  ${filterBar(['all','Issued','Acknowledged','Complete'])}
+  <div class="tbl"><table><thead><tr><th>No.</th><th>Instruction</th><th>Issued to</th><th>Date</th><th>Cost</th><th>Status</th></tr></thead><tbody>
+  ${L.map(r=>`<tr data-open="si:${r.n}"><td class="num">${r.n}</td><td>${esc(r.t)}</td><td>${who(r.to)}</td><td class="num">${fmt(r.date)}</td><td>${esc(r.cost)}</td><td>${pill(r.st)}</td></tr>`).join('')||'<tr><td colspan="6" class="muted">No site instructions on this project yet.</td></tr>'}
+  </tbody></table></div>`}
+
+function cos(p){const L=apply(p.cos,r=>r.st);const appr=p.cos.filter(c=>c.st==='Approved').reduce((a,c)=>a+c.amt,0),pend=p.cos.filter(c=>c.st!=='Approved').reduce((a,c)=>a+c.amt,0);
+  return `${hdr('Change orders',`Approved ${money(appr)} · Pending ${money(pend)}`,'<button class="btn pri" data-new="co">New change order</button>')}
+  ${filterBar(['all','Pending owner','Pending pricing','Approved'])}
+  <div class="tbl"><table><thead><tr><th>No.</th><th>Description</th><th>Source</th><th>Date</th><th class="r">Amount</th><th>Status</th></tr></thead><tbody>
+  ${L.map(r=>`<tr data-open="cos:${r.n}"><td class="num">${r.n}</td><td>${esc(r.t)}</td><td class="num">${esc(r.src)}</td><td class="num">${fmt(r.date)}</td><td class="num r">${money(r.amt)}</td><td>${pill(r.st)}</td></tr>`).join('')||'<tr><td colspan="6" class="muted">No change orders yet.</td></tr>'}
+  </tbody></table></div>
+  <p class="note">In production, approved change orders sync to Yardi Voyager as contract changes.</p>`}
+
+function budget(p){const t=p.budget.reduce((a,b)=>[a[0]+b[1],a[1]+b[2],a[2]+b[3]],[0,0,0]);
+  return `${hdr('Budget','Original budget, committed (subcontracts and POs) and actual cost to date by cost code.')}
+  <div class="tbl"><table><thead><tr><th>Cost code</th><th class="r">Budget</th><th class="r">Committed</th><th class="r">Actual</th><th class="r">Variance</th><th style="width:22%">Committed %</th></tr></thead><tbody>
+  ${p.budget.map(([c,b,cm,a])=>{const pct=b?cm/b*100:0;return `<tr><td>${esc(c)}</td><td class="num r">${money(b)}</td><td class="num r">${money(cm)}</td><td class="num r">${money(a)}</td><td class="num r" style="color:${b-cm<0?'var(--crit)':'inherit'}">${money(b-cm)}</td><td><div class="bar" title="${pct.toFixed(0)}%"><i class="${pct>100?'over':''}" style="width:${Math.min(pct,100)}%"></i></div></td></tr>`}).join('')}
+  <tr><td><b>Total</b></td><td class="num r"><b>${money(t[0])}</b></td><td class="num r"><b>${money(t[1])}</b></td><td class="num r"><b>${money(t[2])}</b></td><td class="num r"><b>${money(t[0]-t[1])}</b></td><td></td></tr>
+  </tbody></table></div>
+  <p class="note">Cost codes follow the Yardi job cost structure so budgets, commitments and invoices sync without remapping.</p>`}
+
+/* ---------- Drawings: sheet viewer with pins, zoom/pan, and click-to-place issues ---------- */
+function hash(s){let h=7;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h}
+function sheetPlan(code){
+  const h=hash(code), cols=5+(h%2), rows=4, x0=70,y0=70,W=740,H=520, cw=W/(cols-1), rh=H/(rows-1);
+  let s=`<rect x="0" y="0" width="1000" height="700" fill="var(--sheet)"/><rect x="20" y="20" width="960" height="660" fill="none" stroke="var(--sheet-ink)" stroke-width="2"/>`;
+  // grid lines + bubbles
+  for(let i=0;i<cols;i++){const x=x0+i*cw;s+=`<line x1="${x}" y1="${y0-30}" x2="${x}" y2="${y0+H+10}" stroke="var(--sheet-faint)" stroke-dasharray="12 4 2 4"/><circle cx="${x}" cy="${y0-42}" r="12" fill="var(--sheet)" stroke="var(--sheet-ink)"/><text x="${x}" y="${y0-38}" font-size="12" text-anchor="middle" fill="var(--sheet-ink)">${i+1}</text>`}
+  for(let j=0;j<rows;j++){const y=y0+j*rh;s+=`<line x1="${x0-30}" y1="${y}" x2="${x0+W+10}" y2="${y}" stroke="var(--sheet-faint)" stroke-dasharray="12 4 2 4"/><circle cx="${x0-42}" cy="${y}" r="12" fill="var(--sheet)" stroke="var(--sheet-ink)"/><text x="${x0-42}" y="${y+4}" font-size="12" text-anchor="middle" fill="var(--sheet-ink)">${'ABCD'[j]}</text>`}
+  // walls: outer + suite demising walls
+  s+=`<g fill="none" stroke="var(--sheet-ink)" stroke-width="6"><rect x="${x0}" y="${y0}" width="${W}" height="${H}"/>`;
+  for(let i=1;i<cols-1;i++){if((h>>i)&1||i%2)s+=`<line x1="${x0+i*cw}" y1="${y0}" x2="${x0+i*cw}" y2="${y0+rh*1.2}"/><line x1="${x0+i*cw}" y1="${y0+rh*1.8}" x2="${x0+i*cw}" y2="${y0+H}"/>`}
+  s+=`<line x1="${x0}" y1="${y0+rh*1.2}" x2="${x0+W}" y2="${y0+rh*1.2}" stroke-width="4"/><line x1="${x0}" y1="${y0+rh*1.8}" x2="${x0+W}" y2="${y0+rh*1.8}" stroke-width="4"/></g>`;
+  // doors
+  for(let i=0;i<cols-1;i++){const x=x0+i*cw+cw*0.3,y=y0+rh*1.2;s+=`<path d="M${x} ${y} a40 40 0 0 0 40 -40" fill="none" stroke="var(--sheet-ink)" stroke-width="1"/><line x1="${x}" y1="${y}" x2="${x}" y2="${y-40}" stroke="var(--sheet-ink)" stroke-width="1.5"/>`}
+  // room tags
+  for(let i=0;i<cols-1;i++){s+=`<text x="${x0+i*cw+cw/2}" y="${y0+rh*0.6}" font-size="13" text-anchor="middle" fill="var(--sheet-ink)">SUITE ${(h%9+1)}0${i+1}</text><text x="${x0+i*cw+cw/2}" y="${y0+rh*2.6}" font-size="13" text-anchor="middle" fill="var(--sheet-ink)">SUITE ${(h%9+1)}${i+11}</text>`}
+  s+=`<text x="${x0+W/2}" y="${y0+rh*1.53}" font-size="12" text-anchor="middle" fill="var(--sheet-ink)" letter-spacing="3">CORRIDOR</text>`;
+  // title block
+  s+=`<g><line x1="845" y1="20" x2="845" y2="680" stroke="var(--sheet-ink)" stroke-width="2"/><rect x="858" y="34" width="110" height="18" fill="var(--brand)"/><text x="913" y="47" font-size="11" text-anchor="middle" fill="#fff" font-weight="600" letter-spacing="2">TOWNLINE</text>
+  <text x="858" y="600" font-size="11" fill="var(--sheet-ink)">${esc(cur().name.toUpperCase())}</text><text x="858" y="660" font-size="30" font-weight="600" fill="var(--sheet-ink)">${code}</text></g>`;
+  return s;
+}
+function pinsFor(code){const p=cur();const out=[];
+  visible(p.rfis).filter(r=>r.dwg===code).forEach(r=>out.push({id:'rfis:'+r.n,x:r.x,y:r.y,label:r.n.split('-')[1],kind:'rfi'}));
+  visible(p.ci).filter(c=>c.link?.kind==='sheet'&&c.link.sheet===code).forEach(c=>out.push({id:'ci:'+c.n,x:c.link.x,y:c.link.y,label:c.n.split('-')[1],kind:'ci'}));
+  visReviews(p).forEach(r=>r.cm.forEach((c,i)=>{if(c.sheet===code)out.push({id:'reviews:'+r.n,x:c.x,y:c.y,label:'C'+(i+1),kind:'cm'})}));
+  return out}
+function pinSVG(pn){
+  if(pn.kind==='ci')return `<g data-open="${pn.id}" style="cursor:pointer"><path d="M${pn.x} ${pn.y-16}L${pn.x+16} ${pn.y}L${pn.x} ${pn.y+16}L${pn.x-16} ${pn.y}Z" fill="var(--crit)"/><text x="${pn.x}" y="${pn.y+4}" font-size="10" text-anchor="middle" fill="#fff" font-weight="600">${pn.label}</text></g>`;
+  if(pn.kind==='cm')return `<g data-open="${pn.id}" style="cursor:pointer"><rect x="${pn.x-14}" y="${pn.y-12}" width="28" height="24" rx="3" fill="var(--warn)"/><text x="${pn.x}" y="${pn.y+4}" font-size="10" text-anchor="middle" fill="#fff" font-weight="600">${pn.label}</text></g>`;
+  return `<g data-open="${pn.id}" style="cursor:pointer"><circle cx="${pn.x}" cy="${pn.y}" r="14" fill="var(--accent)"/><text x="${pn.x}" y="${pn.y+4}" font-size="10" text-anchor="middle" fill="var(--accent-ink)" font-weight="600">${pn.label}</text></g>`}
+function dwgs(p){
+  if(!state.sheet||!p.dwgs.find(x=>x[0]===state.sheet))state.sheet=p.dwgs[0]?.[0];
+  const dw=p.dwgs.find(x=>x[0]===state.sheet);
+  const vb=state.vb||[0,0,1000,700];
+  return `${hdr('Drawings','Current sheet set with RFI, coordination issue and review comment pins.','<button class="btn" data-new="upload">Upload sheets</button>')}
+  <div class="work"><div class="side"><div class="sheetlist">${p.dwgs.map(([c,t,rev])=>`<button data-sheet="${c}" class="${c===state.sheet?'on':''}"><b class="num">${c}</b> · ${esc(rev)}<div class="muted">${esc(t)}</div></button>`).join('')}</div>
+    <div class="card"><h3>Legend</h3><div class="list" style="margin-top:6px"><div class="li"><span><svg width="16" height="16" viewBox="-16 -16 32 32" aria-hidden="true"><circle r="14" fill="var(--accent)"/></svg> RFI</span></div><div class="li"><span><svg width="16" height="16" viewBox="-16 -16 32 32" aria-hidden="true"><path d="M0 -16L16 0L0 16L-16 0Z" fill="var(--crit)"/></svg> Coordination issue</span></div><div class="li"><span><svg width="16" height="16" viewBox="-16 -16 32 32" aria-hidden="true"><rect x="-14" y="-12" width="28" height="24" rx="3" fill="var(--warn)"/></svg> Review comment</span></div></div></div></div>
+  <div class="stage">${dw?`<div class="toolbar"><div><b class="num">${dw[0]}</b> · ${esc(dw[1])} <span class="muted">· ${esc(dw[2])}, published ${fmt(dw[3])}</span></div>
+    <div class="btns"><button class="btn sm" data-zoom="in" aria-label="Zoom in">+</button><button class="btn sm" data-zoom="out" aria-label="Zoom out">−</button><button class="btn sm" data-zoom="fit">Fit</button>
+    <button class="btn sm ${state.placing?'on':''}" data-place="1">${state.placing?'Click the sheet to place…':'Add coordination issue'}</button>
+    <button class="btn sm" data-toast="${dw[4]?'In production this opens Bluebeam Studio session '+dw[4]+'.':'In production this links a Bluebeam Studio session to the sheet.'}">${dw[4]?'Open in Bluebeam':'Link Bluebeam session'}</button></div></div>
+    <div class="sheetwrap ${state.placing?'placing':''}" id="sheetwrap"><svg id="sheetsvg" viewBox="${vb.join(' ')}" role="img" aria-label="Sheet ${dw[0]}">${sheetPlan(dw[0])}${pinsFor(dw[0]).map(pinSVG).join('')}${state.focus?.kind==='sheet'?`<circle class="focusring" cx="${state.focus.x}" cy="${state.focus.y}" r="22"/>`:''}</svg></div>`:'<div class="card muted">No sheets uploaded yet.</div>'}</div></div>`}
+function attachSheet(){
+  const svg=document.getElementById('sheetsvg'); if(!svg)return;
+  let drag=null;
+  svg.addEventListener('pointerdown',e=>{if(state.placing||e.target.closest('[data-open]'))return;drag={x:e.clientX,y:e.clientY,vb:svg.viewBox.baseVal};svg.setPointerCapture(e.pointerId)});
+  svg.addEventListener('pointermove',e=>{if(!drag)return;const r=svg.getBoundingClientRect(),k=drag.vb.width/r.width;svg.setAttribute('viewBox',[drag.vb.x-(e.clientX-drag.x)*k,drag.vb.y-(e.clientY-drag.y)*k,drag.vb.width,drag.vb.height].join(' '));drag.moved=true});
+  svg.addEventListener('pointerup',e=>{if(drag){const b=svg.viewBox.baseVal;state.vb=[b.x,b.y,b.width,b.height];drag=null;return}});
+  svg.addEventListener('click',e=>{if(!state.placing)return;const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(svg.getScreenCTM().inverse());
+    state.placing=false;pendingLink={kind:'sheet',sheet:state.sheet,x:Math.round(q.x),y:Math.round(q.y)};form('ci')});
+  svg.addEventListener('wheel',e=>{e.preventDefault();zoomSheet(e.deltaY<0?0.85:1/0.85)},{passive:false});
+}
+function zoomSheet(k){const svg=document.getElementById('sheetsvg');const b=svg.viewBox.baseVal;const cx=b.x+b.width/2,cy=b.y+b.height/2,w=Math.min(1000,Math.max(120,b.width*k)),h=w*0.7;state.vb=[cx-w/2,cy-h/2,w,h];svg.setAttribute('viewBox',state.vb.join(' '))}
+function goSheet(code,x,y,id){state.tool='dwgs';state.sheet=code;state.vb=[x-160,y-112,320,224];state.focus={kind:'sheet',x,y,id};closeDrawer();view();setTimeout(()=>{if(state.focus?.kind==='sheet')state.focus=null},4500)}
+
+/* ---------- Models: persistent 3D viewer ---------- */
+let viewerReady=null, viewerHost=null, pendingLink=null;
+function loadViewerLib(){
+  if(viewerReady)return viewerReady;
+  viewerReady=new Promise((res,rej)=>{const s=document.createElement('script');s.src='viewer.js';s.onload=()=>res(window.TLViewer);s.onerror=()=>rej(new Error('viewer'));document.head.appendChild(s)})
+    .then(async V=>{const r=await fetch('sample-models.json');window.__SAMPLE=await r.json();return V});
+  return viewerReady}
+function models(p){
+  const ext=me().ext;
+  if(!p.models&&!p.modelFiles.length)return `${hdr('Models','Federated 3D models for coordination.','<button class="btn pri" data-upload-model="1">Upload model</button>')}<div class="card">No models on this project yet. Upload an IFC file to view it in 3D.</div>${modelNote()}`;
+  const linked=visible(p.ci).filter(c=>c.link?.kind==='model');
+  return `${hdr('Models','Federated 3D model. Orbit with the mouse, click any element to inspect it, and create a coordination issue at that exact spot.','<button class="btn pri" data-upload-model="1">Upload model</button>')}
+  <div class="work model">
+    <div class="stage">
+      <div class="toolbar"><div class="layers">${p.modelFiles.filter(m=>m.key||m.loadedName).map(m=>`<label><input type="checkbox" data-layer="${esc(m.key||m.loadedName)}" ${m.on!==false?'checked':''}><span class="sw" style="background:${m.color}"></span>${esc(m.disc)}</label>`).join('')}</div>
+      <div class="btns"><button class="btn sm" data-v="fit">Fit</button><button class="btn sm ${state.isolate?'on':''}" data-v="isolate" ${state.sel?'':'disabled'}>Isolate</button><button class="btn sm pri" data-v="issue" ${state.sel?'':'disabled'}>Create issue here</button></div></div>
+      <div class="viewer" id="viewerSlot"><div class="loading" id="vload">Loading 3D viewer…</div><div class="hud">Drag to orbit · Right-drag to pan · Scroll to zoom</div></div>
+    </div>
+    <div class="side">
+      <div class="card" id="modelPanel">${selPanel()}</div>
+      <div class="card"><h3>Issues in this model</h3><div class="list" style="margin-top:6px">${linked.map(c=>`<div class="li" data-go-model="${c.n}"><div class="t"><span class="num">${c.n}</span> ${esc(c.t)}<div class="muted">${who(c.to)}</div></div>${pill(c.st)}</div>`).join('')||'<div class="li muted">No model-linked issues yet.</div>'}</div></div>
+      <div class="card"><h3>Model files</h3><div class="list" style="margin-top:6px">${p.modelFiles.map(m=>`<div class="li"><div class="t"><span class="num">${esc(m.file)}</span><div class="muted">${esc(m.disc)}</div></div>${pill(m.status)}</div>`).join('')}</div></div>
+    </div>
+  </div>${modelNote()}`}
+function modelNote(){return `<p class="note">Sample geometry: buildingSMART International "Simple Scene" house, split into architectural, structural and HVAC IFC files (CC BY 4.0). Navisworks .nwd and .nwc files are Autodesk's closed format and can't be opened directly in the browser; in production they would be converted through Autodesk Platform Services. IFC files you upload here open right away.</p>`}
+function selPanel(){const s=state.sel;if(!s)return `<h3>Selection</h3><p class="muted" style="margin:6px 0 0">Click an element in the model to see its properties.</p>`;
+  return `<h3>Selection</h3><dl class="dl" style="margin-top:8px"><dt>Name</dt><dd>${esc(s.name||'(unnamed)')}</dd><dt>IFC class</dt><dd>${esc(s.type)}</dd><dt>Discipline</dt><dd>${esc(discOf(s.model))}</dd><dt>GlobalId</dt><dd class="num">${esc(s.guid)}</dd><dt>Picked point</dt><dd class="num">${s.point?s.point.map(v=>v.toFixed(2)).join(', '):'—'}</dd></dl>`}
+const discOf=k=>{const m=cur().modelFiles.find(x=>x.key===k||x.loadedName===k);return m?m.disc:k};
+async function mountViewer(){
+  const slot=document.getElementById('viewerSlot'); if(!slot)return;
+  let V; try{V=await loadViewerLib()}catch(e){document.getElementById('vload').textContent='The 3D viewer could not load. Reload the page to try again.';return}
+  if(!document.getElementById('viewerSlot'))return;
+  V.init(document.getElementById('viewerSlot'));
+  V.setBackground(getComputedStyle(document.documentElement).getPropertyValue('--viewer'));
+  const vl=document.getElementById('vload'); if(vl) vl.remove();
+  const p=cur();
+  // load sample models for this project; drop models from other projects
+  const want=new Set(p.modelFiles.filter(m=>m.key||m.loadedName).map(m=>m.key||m.loadedName));
+  V.modelNames().forEach(n=>{if(!want.has(n))V.removeModel(n)});
+  p.modelFiles.forEach(m=>{if(m.key&&!V.hasModel(m.key)&&window.__SAMPLE[m.key]){V.addModel(m.key,window.__SAMPLE[m.key]);m.status='Loaded'}
+    if(m.loadedName&&!V.hasModel(m.loadedName)&&m.elements){V.addModel(m.loadedName,m.elements)}
+    V.setVisible(m.key||m.loadedName,m.on!==false)});
+  V.setMarkers(visible(p.ci).filter(c=>c.link?.kind==='model'&&c.link.point).map(c=>({id:c.n,label:c.n.split('-')[1],point:c.link.point,color:c.st==='Resolved'?'#3d7a57':'#a84444'})));
+  V.onPick(hit=>{state.sel=hit;state.isolate=false;V.isolate(false);refreshModelUI()});
+  V.onMarker(id=>{detail('ci',id)});
+  if(state.focus?.kind==='model'){const f=state.focus;state.focus=null;
+    const s=V.select(f.guid); state.sel=s?{...s,point:f.point}:null; state.isolate=!!s; V.isolate(state.isolate); refreshModelUI();
+    if(f.view)V.flyTo(f.view); else if(!V.focusGuid(f.guid)) toast('That element is not in the loaded models');}
+  else if(!mountViewer.fitted){mountViewer.fitted=true;V.fit()}
+}
+function refreshModelUI(){const mp=document.getElementById('modelPanel');if(mp)mp.innerHTML=selPanel();
+  document.querySelectorAll('[data-v="issue"],[data-v="isolate"]').forEach(b=>b.disabled=!state.sel);
+  const iso=document.querySelector('[data-v="isolate"]'); if(iso) iso.classList.toggle('on',state.isolate)}
+function goModel(n){const c=cur().ci.find(x=>x.n===n);if(!c?.link)return;state.tool='models';state.focus={kind:'model',...c.link};closeDrawer();view()}
+
+/* ---------- Files ---------- */
+const FOLDERS=['All files','Contracts','CAD','Models','Specifications','Reports','Permits','Uploads'];
+function ftype(n){const e=(n.split('.').pop()||'').toLowerCase();return {pdf:['PDF','pdf'],dwg:['DWG','dwg'],dxf:['DXF','dwg'],rvt:['RVT','rvt'],rfa:['RFA','rvt'],ifc:['IFC','ifc'],nwd:['NWD','nwd'],nwc:['NWC','nwd'],docx:['DOCX','doc'],doc:['DOC','doc'],xlsx:['XLSX','xls'],xls:['XLS','xls'],csv:['CSV','xls'],jpg:['JPG','img'],jpeg:['JPG','img'],png:['PNG','img']}[e]||[e.toUpperCase().slice(0,4)||'FILE','']}
+function files(p){const q=state.q.toLowerCase();const L=p.files.filter(f=>(state.folder==='All files'||f.f===state.folder)&&(!q||f.n.toLowerCase().includes(q)));
+  return `${hdr('Files','Every project file in one place: contracts, PDFs, AutoCAD, Revit, IFC and Navisworks files, specs, reports and permits.','<button class="btn pri" data-upload-file="1">Upload files</button>')}
+  <div class="files"><div class="sheetlist">${FOLDERS.map(f=>`<button data-folder="${f}" class="${state.folder===f?'on':''}">${f} <span class="muted num">${f==='All files'?p.files.length:p.files.filter(x=>x.f===f).length}</span></button>`).join('')}</div>
+  <div class="side"><div class="filters"><input id="q" type="search" placeholder="Search file names…" value="${esc(state.q)}"></div>
+  <div class="drop" id="drop">Drop files here to upload to <b>${esc(state.folder==='All files'?'Uploads':state.folder)}</b></div>
+  <div class="tbl"><table><thead><tr><th>Type</th><th>Name</th><th>Folder</th><th>Version</th><th>Size</th><th>Uploaded</th><th></th></tr></thead><tbody>
+  ${L.sort((a,b)=>b.dt.localeCompare(a.dt)).map((f,i)=>{const [lab,cls]=ftype(f.n);const ifc=cls==='ifc';return `<tr><td><span class="ft ${cls}">${lab}</span></td><td style="overflow-wrap:anywhere">${esc(f.n)}</td><td>${esc(f.f)}</td><td class="num">v${f.v}</td><td class="num">${kb(f.sz)}</td><td class="num">${fmt(f.dt)} · ${who(f.by)}</td><td>${ifc&&f.bytes?`<button class="btn sm" data-open-ifc="${esc(f.n)}">View in 3D</button>`:cls==='nwd'?`<span class="muted" style="font-size:12px">Needs conversion</span>`:''}</td></tr>`}).join('')||'<tr><td colspan="7" class="muted">No files in this folder yet.</td></tr>'}
+  </tbody></table></div></div></div>`}
+
+function assets(p){const L=apply(p.assets,r=>r.st);
+  return `${hdr('Asset register','Equipment and fixtures, filled in as submittals, inspections and warranties are approved.','<button class="btn pri" data-new="asset">Add asset</button>')}
+  ${filterBar(['all','Planned','Installed','Commissioned'])}
+  <div class="tbl"><table><thead><tr><th>Asset ID</th><th>Name</th><th>Category</th><th>Location</th><th>Warranty to</th><th>Handover docs</th><th>Status</th></tr></thead><tbody>
+  ${L.map(a=>`<tr data-open="assets:${a.id}"><td class="num">${a.id}</td><td>${esc(a.name)}<div class="muted">${esc(a.mfr)} ${esc(a.model)}</div></td><td>${esc(a.cat)}</td><td>${esc(a.loc)}</td><td class="num">${fmt(a.warr)}</td><td><div class="num">${a.docs}/${a.req}</div><div class="bar"><i style="width:${a.docs/a.req*100}%"></i></div></td><td>${pill(a.st)}</td></tr>`).join('')||'<tr><td colspan="7" class="muted">No assets on this project yet.</td></tr>'}
+  </tbody></table></div>`}
+
+function team(p){return `${hdr('Team & access','Townline staff and external partners on this project. External users only see items assigned to them.','<button class="btn pri" data-new="invite">Invite person</button>')}
+  <div class="tbl"><table><thead><tr><th>Name</th><th>Company</th><th>Role</th><th>Access</th></tr></thead><tbody>
+  ${p.team.map(id=>{const u=P(id);return `<tr><td>${who(id)}</td><td>${esc(u.co)}</td><td>${esc(u.role)}</td><td>${u.ext?'Assigned items only':'Full project'}</td></tr>`}).join('')}
+  </tbody></table></div>`}
+
+/* ---------- Detail drawer ---------- */
+function openDrawer(html){const dr=document.getElementById('drawer');document.getElementById('drawerIn').innerHTML=html;dr.hidden=false;document.querySelector('#drawerIn button')?.focus()}
+function closeDrawer(){document.getElementById('drawer').hidden=true}
+const CLOSE=lbl=>`<div class="head"><span class="num muted">${state.proj}</span><button class="btn" data-close>${lbl||'Close'}</button></div>`;
+function detail(kind,id){const p=cur();const key={rfis:'n',ci:'n',si:'n',cos:'n',reviews:'n',assets:'id'}[kind];const r=p[kind].find(x=>x[key]===id);if(!r)return;
+  if(kind==='rfis')return openDrawer(`${CLOSE()}<h2>${r.n} · ${esc(r.t)}</h2><div>${pill(r.st,overdue(r))}</div>
+    <dl class="dl"><dt>Ball in court</dt><dd>${who(r.to)}</dd><dt>Created by</dt><dd>${who(r.by)}</dd><dt>Due</dt><dd>${fmt(r.due)}</dd><dt>Location</dt><dd>${esc(r.loc)}</dd><dt>Impact</dt><dd>${esc(r.imp)}</dd><dt>Drawing</dt><dd><span class="chip" data-go-sheet="${r.dwg}:${r.x}:${r.y}:${r.n}"><i></i>Open sheet ${r.dwg} at pin</span></dd></dl>
+    <div class="thread"><div class="msg"><div class="m">${who(r.by)} · question</div>Please confirm the intended detail. Site has flagged a conflict with the current revision; photos attached.</div>
+    ${r.st!=='Open'?`<div class="msg"><div class="m">${who(r.to)} · official response</div>Proceed per sketch SK-12 attached. No change to contract sum.</div>`:''}</div>
+    ${r.st==='Open'?`<form class="f" data-respond="${r.n}"><label for="resp">Response<textarea id="resp" rows="3" required placeholder="Type a response…"></textarea></label><div class="btns"><button class="btn pri" type="submit">Send response</button>${me().ext?'':`<button class="btn" type="button" data-toco="${r.n}">Create change order</button>`}</div></form>`:''}`);
+  if(kind==='ci'){const l=r.link;
+    return openDrawer(`${CLOSE()}<h2>${r.n} · ${esc(r.t)}</h2><div>${pill(r.st)}</div>
+    <dl class="dl"><dt>Trade</dt><dd>${esc(r.trade)}</dd><dt>Assigned to</dt><dd>${who(r.to)}</dd><dt>Created by</dt><dd>${who(r.by)}</dd><dt>Location</dt><dd>${esc(r.loc)}</dd><dt>Source</dt><dd>${esc(r.src)}</dd>
+    ${l?.kind==='model'?`<dt>Model element</dt><dd class="num">${esc(l.guid)}</dd><dt>Point</dt><dd class="num">${l.point?l.point.join(', '):'—'}</dd>`:''}${l?.kind==='sheet'?`<dt>Sheet</dt><dd class="num">${esc(l.sheet)} at ${l.x}, ${l.y}</dd>`:''}</dl>
+    ${l?`<button class="btn pri" ${l.kind==='model'?`data-go-model="${r.n}"`:`data-go-sheet="${l.sheet}:${l.x}:${l.y}:${r.n}"`}>${l.kind==='model'?'Open in 3D model at this location':'Open sheet '+esc(l.sheet)+' at this location'}</button>`:''}
+    <div class="thread"><div class="msg"><div class="m">${who(r.by)} · created</div>${esc(r.t)}. Please review and propose a resolution.</div></div>
+    ${r.st==='Open'?`<button class="btn" data-resolve="${r.n}">Mark resolved</button>`:''}`)}
+  if(kind==='reviews'){const mine=r.rv.find(x=>x.id===state.as&&x.st==='Reviewing');
+    return openDrawer(`${CLOSE()}<h2>${r.n} · ${esc(r.t)}</h2><div>${pill(r.st,overdue(r))}</div>
+    <dl class="dl"><dt>Due</dt><dd>${fmt(r.due)}</dd><dt>Sheets</dt><dd>${r.sheets.map(s=>`<span class="chip" data-go-sheet="${s}:500:350:">${s}</span>`).join(' ')}</dd><dt>Bluebeam</dt><dd>${r.bb?`Session ${esc(r.bb)} <button class="btn sm" data-toast="In production this opens Bluebeam Studio session ${esc(r.bb)}.">Open</button>`:'No session linked'}</dd></dl>
+    <h3>Reviewers</h3><div class="list">${r.rv.map(x=>`<div class="li"><span>${who(x.id)} <span class="muted">${esc(P(x.id).role)}</span></span>${pill(x.st)}</div>`).join('')}</div>
+    ${mine?`<div class="btns"><button class="btn pri" data-rv="${r.n}:Approved">Approve</button><button class="btn" data-rv="${r.n}:Returned">Return with comments</button></div>`:''}
+    <h3>Comments (${r.cm.length})</h3><div class="list">${r.cm.map((c,i)=>`<div class="li"><div class="t"><span class="num">C${i+1}</span> ${esc(c.t)}<div class="muted">${who(c.by)} · sheet ${esc(c.sheet)}</div><div class="btns" style="margin-top:6px"><span class="chip" data-go-sheet="${c.sheet}:${c.x}:${c.y}:${r.n}"><i></i>Show on sheet</span>${me().ext?'':`<button class="btn sm" data-cm2ci="${r.n}:${i}">Make coordination issue</button>`}</div></div></div>`).join('')||'<div class="li muted">No comments yet.</div>'}</div>
+    <form class="f" data-comment="${r.n}"><label for="cmt">Add a comment<textarea id="cmt" rows="2" required placeholder="Comment on this package…"></textarea></label><label for="cmsheet">Sheet<select id="cmsheet">${r.sheets.map(s=>`<option>${s}</option>`).join('')}</select></label><button class="btn" type="submit">Post comment</button></form>`)}
+  if(kind==='si')return openDrawer(`${CLOSE()}<h2>${r.n} · ${esc(r.t)}</h2><div>${pill(r.st)}</div><dl class="dl"><dt>Issued to</dt><dd>${who(r.to)}</dd><dt>Date</dt><dd>${fmt(r.date)}</dd><dt>Cost</dt><dd>${esc(r.cost)}</dd></dl>${r.st==='Issued'?`<button class="btn pri" data-ack="${r.n}">Acknowledge (as trade)</button>`:''}`);
+  if(kind==='cos')return openDrawer(`${CLOSE()}<h2>${r.n} · ${esc(r.t)}</h2><div>${pill(r.st)}</div><dl class="dl"><dt>Amount</dt><dd class="num">${money(r.amt)}</dd><dt>Source</dt><dd>${esc(r.src)}</dd><dt>Date</dt><dd>${fmt(r.date)}</dd><dt>Yardi sync</dt><dd>${r.st==='Approved'?'Exported as contract change':'Waits for approval'}</dd></dl>${r.st!=='Approved'?`<button class="btn pri" data-approve="${r.n}">Approve</button>`:''}`);
+  if(kind==='assets'){const docs=['Approved submittal','O&M manual','Warranty certificate','Commissioning report'].slice(0,r.req);
+    return openDrawer(`${CLOSE()}<h2>${r.id} · ${esc(r.name)}</h2><div>${pill(r.st)}</div><dl class="dl"><dt>Category</dt><dd>${esc(r.cat)}</dd><dt>Location</dt><dd>${esc(r.loc)}</dd><dt>Manufacturer</dt><dd>${esc(r.mfr)}</dd><dt>Model</dt><dd>${esc(r.model)}</dd><dt>Warranty to</dt><dd>${fmt(r.warr)}</dd></dl><h3>Handover checklist</h3><div class="list">${docs.map((x,i)=>`<div class="li"><span>${x}</span>${pill(i<r.docs?'Complete':'Missing')}</div>`).join('')}</div>`)}
+}
+
+/* ---------- Forms ---------- */
+const NEXT=(arr,pre)=>{const n=Math.max(0,...arr.map(x=>parseInt(String(x.n||x.id).split('-').pop())||0))+1;return `${pre}-${String(n).padStart(3,'0')}`};
+function form(kind,pre={}){const p=cur();const team=p.team.map(P);const opt=sel=>team.map(u=>`<option value="${u.id}" ${u.id===sel?'selected':''}>${esc(u.name)} — ${esc(u.role)}${u.ext?' (external)':''}</option>`).join('');
+  const L=pendingLink;
+  const linkBox=L?`<div class="linkbox"><b>Linked location:</b> ${L.kind==='model'?`3D model · ${esc(L.name||L.type)} <span class="num">(${esc(L.guid)})</span>, camera view saved`:`Sheet ${esc(L.sheet)} at ${L.x}, ${L.y}`}</div>`:'';
+  const F={rfi:['New RFI',`<label for="ft">Subject<input id="ft" required></label><div class="row"><label for="fto">Ball in court<select id="fto">${opt()}</select></label><label for="fdue">Due date<input id="fdue" type="date" value="2026-10-16" required></label></div><div class="row"><label for="floc">Location<input id="floc" placeholder="e.g. Level 9"></label><label for="fdwg">Drawing<select id="fdwg">${p.dwgs.map(x=>`<option>${x[0]}</option>`).join('')}</select></label></div><label for="fimp">Impact<select id="fimp"><option>None</option><option>Cost</option><option>Schedule</option><option>Cost + Schedule</option></select></label><label for="fq">Question<textarea id="fq" rows="4"></textarea></label>`],
+    ci:['New coordination issue',`${linkBox}<label for="ft">Issue<input id="ft" required value="${esc(pre.t||'')}"></label><div class="row"><label for="fto">Assign to<select id="fto">${opt(pre.to)}</select></label><label for="ftr">Trade<select id="ftr">${['Mechanical','Electrical','Plumbing','Structural','Architectural'].map(t=>`<option ${t===pre.trade?'selected':''}>${t}</option>`).join('')}</select></label></div><label for="floc">Location<input id="floc" value="${esc(pre.loc||'')}" placeholder="e.g. Level 9 corridor"></label><label for="fdesc">Description<textarea id="fdesc" rows="3"></textarea></label>`],
+    review:['Start a drawing review',`<label for="ft">Package name<input id="ft" required placeholder="e.g. IFC set 4 – Mechanical"></label><label for="fsh">Sheets<select id="fsh" multiple size="${Math.min(6,p.dwgs.length)}">${p.dwgs.map(x=>`<option value="${x[0]}">${x[0]} – ${esc(x[1])}</option>`).join('')}</select></label><label for="frv">Reviewers<select id="frv" multiple size="${Math.min(6,team.length)}">${team.map(u=>`<option value="${u.id}">${esc(u.name)} — ${esc(u.role)}</option>`).join('')}</select></label><div class="row"><label for="fdue">Due date<input id="fdue" type="date" value="2026-10-20" required></label><label for="fbb">Bluebeam session ID (optional)<input id="fbb" placeholder="e.g. 482-115-990"></label></div>`],
+    si:['Issue site instruction',`<label for="ft">Instruction<input id="ft" required></label><label for="fto">Issue to<select id="fto">${opt()}</select></label>`],
+    co:['New change order',`<label for="ft">Description<input id="ft" required value="${esc(pre.t||'')}"></label><div class="row"><label for="famt">Amount (CAD)<input id="famt" type="number" required value="0"></label><label for="fsrc">Source<input id="fsrc" value="${esc(pre.src||'')}" placeholder="e.g. RFI-042"></label></div>`],
+    asset:['Add asset',`<label for="ft">Name<input id="ft" required></label><div class="row"><label for="fcat">Category<select id="fcat"><option>HVAC</option><option>Plumbing</option><option>Electrical</option><option>Appliance</option><option>Life safety</option></select></label><label for="floc">Location<input id="floc" required></label></div><div class="row"><label for="fmfr">Manufacturer<input id="fmfr"></label><label for="fmod">Model<input id="fmod"></label></div>`],
+    invite:['Invite person',`<label for="ft">Name<input id="ft" required></label><label for="fco">Company<input id="fco" required></label><label for="fe">Email<input id="fe" type="email" placeholder="name@company.com"></label><label for="fext">Access<select id="fext"><option value="0">Townline staff (full project)</option><option value="1">External (assigned items only)</option></select></label>`],
+    upload:['Upload sheets',`<label for="ff">PDF drawing set<input id="ff" type="file" accept=".pdf"></label><p class="muted">In production, each page is split into a sheet, numbered from its title block, and pre-rendered for fast viewing on site.</p>`]}[kind];
+  openDrawer(`${CLOSE('Cancel')}<h2>${F[0]}</h2><form class="f" data-create="${kind}">${F[1]}<button class="btn pri" type="submit">Create</button></form>`);
+}
+function create(kind){const p=cur(),v=id=>document.getElementById(id)?.value||'';const multi=id=>[...(document.getElementById(id)?.selectedOptions||[])].map(o=>o.value);
+  if(kind==='rfi'){const n=NEXT(p.rfis,'RFI');p.rfis.unshift({n,t:v('ft'),to:v('fto'),by:state.as,due:v('fdue'),st:'Open',imp:v('fimp'),loc:v('floc')||'—',dwg:v('fdwg'),x:500,y:350});toast(`${n} sent to ${P(v('fto')).name}`);state.tool='rfis'}
+  if(kind==='ci'){const n=NEXT(p.ci,'CI');const L=pendingLink;let link=null;
+    if(L?.kind==='model')link={kind:'model',guid:L.guid,point:L.point,view:L.view};
+    if(L?.kind==='sheet')link={kind:'sheet',sheet:L.sheet,x:L.x,y:L.y};
+    p.ci.unshift({n,t:v('ft'),trade:v('ftr'),to:v('fto'),by:state.as,st:'Open',loc:v('floc')||'—',src:L?.kind==='model'?'Model review':L?.kind==='sheet'?'Sheet markup':'Manual',link});
+    pendingLink=null;toast(`${n} assigned to ${P(v('fto')).name}`);closeDrawer();
+    if(link?.kind==='model'){state.focus=null;view();return}
+    if(link?.kind==='sheet'){view();return}
+    state.tool='ci'}
+  if(kind==='review'){const n=NEXT(p.reviews,'DR');const sh=multi('fsh'),rv=multi('frv');if(!sh.length||!rv.length){toast('Pick at least one sheet and one reviewer');return}
+    p.reviews.unshift({n,t:v('ft'),sheets:sh,due:v('fdue'),st:'In review',bb:v('fbb'),rv:rv.map(id=>({id,st:'Reviewing'})),cm:[]});toast(`${n} sent to ${rv.length} reviewer${rv.length>1?'s':''}`);state.tool='reviews'}
+  if(kind==='si'){const n=NEXT(p.si,'SI');p.si.unshift({n,t:v('ft'),to:v('fto'),st:'Issued',date:'2026-10-09',cost:'Pending'});toast(`${n} issued`);state.tool='si'}
+  if(kind==='co'){const n=NEXT(p.cos,'CO');p.cos.unshift({n,t:v('ft'),amt:+v('famt'),st:'Pending pricing',src:v('fsrc')||'—',date:'2026-10-09'});toast(`${n} created`);state.tool='cos'}
+  if(kind==='asset'){const id='AST-'+String(1000+p.assets.length+Math.floor(Math.random()*900));p.assets.unshift({id,name:v('ft'),cat:v('fcat'),loc:v('floc'),mfr:v('fmfr')||'—',model:v('fmod')||'',warr:'2028-11-30',st:'Planned',docs:0,req:4});toast(`${id} added`);state.tool='assets'}
+  if(kind==='invite'){const id='u'+Date.now();PEOPLE.push({id,name:v('ft'),co:v('fco'),role:v('fext')==='1'?'External partner':'Townline staff',ext:v('fext')==='1'});p.team.push(id);selects();toast(`${v('ft')} invited`);state.tool='team'}
+  if(kind==='upload'){toast('Sheet upload is simulated in the prototype')}
+  closeDrawer();view();
+}
+
+/* ---------- Uploads ---------- */
+let uploadMode='files';
+function pickFiles(mode){uploadMode=mode;const fi=document.getElementById('fileIn');fi.value='';fi.accept=mode==='model'?'.ifc,.nwd,.nwc':'';fi.click()}
+async function handleFiles(list){const p=cur();
+  for(const file of list){const [,cls]=ftype(file.name);
+    const folder=uploadMode==='model'||cls==='ifc'||cls==='nwd'||cls==='rvt'?'Models':(state.folder==='All files'?'Uploads':state.folder);
+    const entry={f:folder,n:file.name,sz:file.size,by:state.as,dt:'2026-10-09',v:1};
+    if(cls==='ifc'){entry.bytes=new Uint8Array(await file.arrayBuffer())}
+    p.files.unshift(entry);
+    if(cls==='ifc'&&uploadMode==='model'){await openIfc(entry);continue}
+    if(cls==='nwd'){p.modelFiles.push({key:null,file:file.name,disc:'Navisworks',color:'#6d6e71',status:'Needs conversion'});toast(`${file.name} saved to Files. Navisworks files need conversion before they can be viewed.`);continue}
+    toast(`${file.name} uploaded to ${folder}`)}
+  view()}
+async function openIfc(entry){const p=cur();let m=p.modelFiles.find(x=>x.loadedName===entry.n);
+  if(!m){m={key:null,loadedName:entry.n,file:entry.n,disc:entry.n.replace(/\.ifc$/i,''),color:'#455a79',status:'Converting…',on:true};p.modelFiles.push(m)}
+  state.tool='models';view();toast(`Opening ${entry.n}…`);
+  try{const V=await loadViewerLib();V.init(document.getElementById('viewerSlot'));const els=await V.loadIfcBytes(entry.n,entry.bytes);m.status='Loaded';m.elements=els; // kept so the model reloads after a project switch
+    toast(`${entry.n} loaded · ${els.length} elements`);view();V.fit()}
+  catch(e){m.status='Could not open';toast(`${entry.n} could not be opened in the browser viewer`);console.error(e);view()}}
+
+let tt;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,3400)}
+
+/* ---------- Events ---------- */
+document.addEventListener('click',async e=>{
+  if(e.target.id==='drawer'){closeDrawer();return}
+  const t=e.target.closest('[data-go-sheet],[data-go-model],[data-go-model-link],[data-go-sheet-link],[data-tool],[data-open],[data-new],[data-close],[data-sheet],[data-zoom],[data-place],[data-v],[data-resolve],[data-ack],[data-approve],[data-toco],[data-toast],[data-rv],[data-cm2ci],[data-folder],[data-upload-file],[data-upload-model],[data-open-ifc]');
+  if(!t)return;const ds=t.dataset;
+  if(ds.goModelLink||ds.goSheetLink){e.stopPropagation();const n=t.closest('[data-ci]').dataset.ci;const c=cur().ci.find(x=>x.n===n);if(c.link.kind==='model')goModel(n);else goSheet(c.link.sheet,c.link.x,c.link.y,'ci:'+n);return}
+  if(ds.goSheet){e.stopPropagation();const [s,x,y,id]=ds.goSheet.split(':');goSheet(s,+x,+y,id);return}
+  if(ds.goModel){goModel(ds.goModel);return}
+  if(ds.tool){state.tool=ds.tool;state.q='';state.f='all';state.focus=null;state.placing=false;view();return}
+  if(ds.open){const [k,id]=ds.open.split(':');detail(k,id);return}
+  if(ds.new){pendingLink=null;form(ds.new);return}
+  if('close' in ds){closeDrawer();pendingLink=null;return}
+  if(ds.sheet){state.sheet=ds.sheet;state.vb=null;state.focus=null;view();return}
+  if(ds.zoom){if(ds.zoom==='fit'){state.vb=null;view()}else zoomSheet(ds.zoom==='in'?0.75:1/0.75);return}
+  if(ds.place){state.placing=!state.placing;view();if(state.placing)toast('Click the spot on the sheet where the issue is');return}
+  if(ds.v){const V=window.TLViewer;if(!V)return;
+    if(ds.v==='fit')V.fit();
+    if(ds.v==='isolate'){state.isolate=!state.isolate;V.isolate(state.isolate);refreshModelUI()}
+    if(ds.v==='issue'&&state.sel){const s=state.sel;pendingLink={kind:'model',guid:s.guid,point:s.point,view:V.getViewpoint(),name:s.name,type:s.type};
+      form('ci',{t:`${s.type.replace('Ifc','')} – ${s.name||''}: `,trade:{'Building-Hvac':'Mechanical','Building-Structural':'Structural','Building-Architecture':'Architectural'}[s.model]||'Architectural'})}
+    return}
+  if(ds.resolve){cur().ci.find(x=>x.n===ds.resolve).st='Resolved';closeDrawer();toast(ds.resolve+' resolved');view();return}
+  if(ds.ack){cur().si.find(x=>x.n===ds.ack).st='Acknowledged';closeDrawer();toast(ds.ack+' acknowledged');view();return}
+  if(ds.approve){cur().cos.find(x=>x.n===ds.approve).st='Approved';closeDrawer();toast(ds.approve+' approved and queued for Yardi');view();return}
+  if(ds.toco){const r=cur().rfis.find(x=>x.n===ds.toco);form('co',{t:r.t,src:r.n});return}
+  if(ds.rv){const [n,st]=ds.rv.split(':');const r=cur().reviews.find(x=>x.n===n);r.rv.find(x=>x.id===state.as).st=st;if(r.rv.every(x=>x.st!=='Reviewing'))r.st='Complete';toast(st==='Approved'?`${n} approved`:`${n} returned with comments`);view();detail('reviews',n);return}
+  if(ds.cm2ci){const [n,i]=ds.cm2ci.split(':');const r=cur().reviews.find(x=>x.n===n);const c=r.cm[+i];pendingLink={kind:'sheet',sheet:c.sheet,x:c.x,y:c.y};form('ci',{t:c.t,to:c.by,loc:'From '+n});return}
+  if(ds.folder){state.folder=ds.folder;view();return}
+  if(ds.uploadFile){pickFiles('files');return}
+  if(ds.uploadModel){pickFiles('model');return}
+  if(ds.openIfc){const f=cur().files.find(x=>x.n===ds.openIfc);if(f)openIfc(f);return}
+  if(ds.toast){toast(ds.toast);return}
+});
+document.addEventListener('submit',e=>{e.preventDefault();const f=e.target;
+  if(f.dataset.create)create(f.dataset.create);
+  if(f.dataset.respond){const r=cur().rfis.find(x=>x.n===f.dataset.respond);r.st='Answered';closeDrawer();toast(`Response sent on ${r.n}`);view()}
+  if(f.dataset.comment){const r=cur().reviews.find(x=>x.n===f.dataset.comment);r.cm.push({by:state.as,sheet:document.getElementById('cmsheet').value,x:200+Math.round(Math.random()*500),y:150+Math.round(Math.random()*350),t:document.getElementById('cmt').value});toast('Comment posted');view();detail('reviews',r.n)}});
+document.addEventListener('input',e=>{if(e.target.id==='q'){state.q=e.target.value;const pos=e.target.selectionStart;view();const q=document.getElementById('q');if(q){q.focus();q.setSelectionRange(pos,pos)}}});
+document.addEventListener('change',e=>{if(e.target.id==='f'){state.f=e.target.value;view()}
+  if(e.target.dataset.layer){const p=cur();const m=p.modelFiles.find(x=>(x.key||x.loadedName)===e.target.dataset.layer);if(m)m.on=e.target.checked;window.TLViewer?.setVisible(e.target.dataset.layer,e.target.checked)}
+  if(e.target.id==='fileIn'){handleFiles([...e.target.files])}
+  if(e.target.id==='proj'){state.proj=e.target.value;state.q='';state.f='all';state.sheet=null;state.vb=null;state.sel=null;state.focus=null;mountViewer.fitted=false;window.TLViewer?.select(null);view();toast('Switched to '+cur().name)}
+  if(e.target.id==='as'){state.as=e.target.value;view()}});
+document.addEventListener('dragover',e=>{const dz=e.target.closest?.('#drop');if(dz){e.preventDefault();dz.classList.add('over')}});
+document.addEventListener('dragleave',e=>{const dz=e.target.closest?.('#drop');if(dz)dz.classList.remove('over')});
+document.addEventListener('drop',e=>{const dz=e.target.closest?.('#drop');if(dz){e.preventDefault();uploadMode='files';handleFiles([...e.dataTransfer.files])}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();if(state.placing){state.placing=false;view()}}});
+selects();view();
+</script>
+
+</body></html>
