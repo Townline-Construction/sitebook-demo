@@ -9,7 +9,7 @@
   --accent:#455a79; --accent-ink:#ffffff; --accent-soft:#e4e9f0; --brand:#788da4; --head:#eaf0f7; --head-ink:#455a79; --hi:#455a79; --viewer:#e9ecf0; --sheet:#ffffff; --sheet-ink:#3a3c40; --sheet-faint:#c3c8cf;
   --good:#3d7a57; --warn:#a1742a; --crit:#a84444; --info:#455a79;
   --good-soft:#e2eee7; --warn-soft:#f3ebdc; --crit-soft:#f4e1e1; --info-soft:#e4e9f0;
-  --top-a:#455a79; --top-b:#788da4; --top-ink:#ffffff;
+  --top-a:#455a79; --top-b:#788da4; --top-ink:#ffffff; --sheet-cut:#d3d9e1;
   --display:"Arial Narrow",Arial,sans-serif; --body:Arial,Helvetica,sans-serif; --mono:Arial,Helvetica,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
@@ -152,6 +152,43 @@ form.f{display:flex;flex-direction:column;gap:12px}
 .drop{border:1px dashed var(--line);border-radius:8px;padding:14px;text-align:center;color:var(--muted);font-size:13px}
 .drop.over{border-color:var(--accent);background:var(--accent-soft)}
 .rv{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center}
+
+/* segmented controls, tabs, minimap, alignment banner, model position, report */
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{all:unset;cursor:pointer;padding:5px 11px;font-size:12px;font-weight:600;border-right:1px solid var(--line);white-space:nowrap}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+.seg button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.toolbar.levels{justify-content:flex-start;gap:10px;background:var(--bg)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tabs button{all:unset;cursor:pointer;padding:8px 12px;font-weight:600;font-size:13px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--hi)}
+.tabs button:focus-visible{outline:2px solid var(--accent)}
+.minimap{position:absolute;left:10px;top:10px;width:min(280px,46%);background:#ffffff;border:1px solid #9fb0c4;border-radius:6px;box-shadow:0 2px 10px rgba(20,30,45,.25);overflow:hidden;z-index:2;color:#231f20}
+.minimap svg{display:block;width:100%;height:auto;aspect-ratio:1/1;cursor:crosshair}
+.mmh{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:5px 9px;background:#455a79;color:#fff;font-size:12px}
+.mmh b{font-family:var(--display);letter-spacing:.06em;text-transform:uppercase}
+.mmf{font-size:10.5px;color:#5d6066;padding:3px 9px;border-top:1px solid #dde2e8}
+.banner{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:var(--accent-soft);border:1px solid var(--hi);border-radius:8px;padding:10px 14px;font-size:13px}
+.hint{font-size:12px;padding:6px 10px;border-top:1px solid var(--line)}
+.sheetwrap.mk-cloud,.sheetwrap.mk-pin{cursor:crosshair}
+.lvl{font-size:10px;font-weight:600;letter-spacing:.04em;background:var(--accent-soft);color:var(--hi);border-radius:3px;padding:1px 5px;margin-left:4px;white-space:nowrap}
+.xf{border-top:1px solid var(--line);padding:10px 0}
+.xfh{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.xfh b{flex:1;min-width:0;font-size:13px}
+.xfg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.xfg label{display:flex;flex-direction:column;gap:2px;font-size:11px;color:var(--muted)}
+.xfg input{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:4px;padding:5px 6px;font-size:13px;font-variant-numeric:tabular-nums}
+.xfg input:disabled{opacity:.55}
+.p-low{background:var(--line);color:var(--muted)}
+.repsum{display:flex;flex-wrap:wrap;gap:14px;align-items:center;font-size:13px}
+.repcards{display:flex;flex-direction:column;gap:14px}
+.repcard{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:10px;break-inside:avoid}
+.rch{display:flex;gap:8px;align-items:center}
+.repno{font-family:var(--display);font-size:20px;font-weight:600;color:var(--hi)}
+.rcb{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px;align-items:start}
+@media (max-width:860px){.rcb{grid-template-columns:1fr}}
+@media print{.rail,.top,.report .btns,.note{display:none!important}.app{display:block}body{background:#fff;color:#000}.repcard{border-color:#bbb}}
 @media (max-width:980px){.work,.work.model,.files{grid-template-columns:1fr}}
 @media (max-width:860px){
   .app{grid-template-columns:1fr}
@@ -245,12 +282,13 @@ const PROJECTS = {
       {n:'CO-010',t:'Delete feature wall in amenity lounge',amt:-18200,st:'Approved',src:'Design change',date:'2026-09-15'},
       {n:'CO-009',t:'Unforeseen soil remediation at NE corner',amt:96400,st:'Approved',src:'Site condition',date:'2026-08-28'}],
     ci:[
-      {n:'CI-092',t:'Flue duct penetrates roof slab – no firestop or flashing detail',trade:'Mechanical',to:'mp',by:'tm',st:'Open',loc:'Roof',src:'Clash: HVAC vs Architectural',link:{kind:'model',guid:G.duct,point:[7.9,4.55,-7.95]}},
-      {n:'CI-091',t:'Chimney cover clashes with right roof slab at ridge',trade:'Architectural',to:'ar',by:'tm',st:'Open',loc:'Roof',src:'Clash: HVAC vs Architectural',link:{kind:'model',guid:G.cover,point:[8.05,4.85,-7.95]}},
-      {n:'CI-090',t:'Girder bearing at kitchen wall – confirm beam shoe capacity',trade:'Structural',to:'dc',by:'jl',st:'Open',loc:'Level 1',src:'Model review',link:{kind:'model',guid:G.girder,point:[7.85,2.5,-6.25]}},
-      {n:'CI-088',t:'Sprinkler main clashes with HVAC duct, corridor L9',trade:'Mechanical',to:'mp',by:'sk',st:'Open',loc:'Level 9',src:'Sheet markup',link:{kind:'sheet',sheet:'M-412',x:560,y:300}},
-      {n:'CI-089',t:'Cable tray below beam clearance, P1 electrical room',trade:'Electrical',to:'ew',by:'sk',st:'Open',loc:'P1',src:'Sheet markup',link:{kind:'sheet',sheet:'E-301',x:380,y:360}},
-      {n:'CI-085',t:'Plumbing stack offset through transfer slab',trade:'Plumbing',to:'mp',by:'tm',st:'Resolved',loc:'Level 3',src:'Clash: HVAC vs Structural',link:{kind:'model',guid:G.chimney,point:[8.05,2.2,-7.6]}}],
+      {n:'CI-092',t:'Flue duct penetrates roof slab – no firestop or flashing detail',trade:'Mechanical',to:'mp',by:'tm',st:'Open',loc:'Roof',src:'Clash: HVAC vs Architectural',pri:'Critical',desc:'The HVAC flue duct passes through the right roof slab with no firestop, sleeve or flashing detail shown. Provide a penetration detail and confirm the roofing sequence.',link:{kind:'model',mkey:'Building-Hvac',guid:G.duct,point:[7.9,4.55,-7.95]}},
+      {n:'CI-093',t:'Kitchen millwork tight to plumbing wall – check clearance for supply lines',trade:'Architectural',to:'ar',by:'tm',st:'Open',loc:'Level 1 · Kitchen',src:'Sheet markup',pri:'High',desc:'Kitchen cabinets are drawn hard against the plumbing wall. Confirm a 50 mm service gap for the supply lines and shut-offs, or move the run.',link:{kind:'sheet',sheet:'A-101',x:578,y:344,cloud:{x:540,y:276,w:78,h:140},text:'Confirm service gap at plumbing wall'}},
+      {n:'CI-091',t:'Chimney cover clashes with right roof slab at ridge',trade:'Architectural',to:'ar',by:'tm',st:'Open',loc:'Roof',src:'Clash: HVAC vs Architectural',pri:'High',desc:'The chimney cover sits into the right roof slab at the ridge. Adjust the cover height or the slab opening.',link:{kind:'model',mkey:'Building-Hvac',guid:G.cover,point:[8.05,4.85,-7.95]}},
+      {n:'CI-090',t:'Girder bearing at kitchen wall – confirm beam shoe capacity',trade:'Structural',to:'dc',by:'jl',st:'Open',loc:'Level 1',src:'Model review',pri:'Medium',desc:'Confirm the beam shoe capacity where the girder bears on the kitchen wall.',link:{kind:'model',mkey:'Building-Structural',guid:G.girder,point:[7.85,2.35,-6.25]}},
+      {n:'CI-088',t:'Sprinkler main clashes with HVAC duct, corridor L9',trade:'Mechanical',to:'mp',by:'sk',st:'Open',loc:'Level 9',src:'Sheet markup',pri:'High',desc:'Sprinkler main and supply duct occupy the same space in the corridor ceiling.',link:{kind:'sheet',sheet:'M-412',x:560,y:300}},
+      {n:'CI-089',t:'Cable tray below beam clearance, P1 electrical room',trade:'Electrical',to:'ew',by:'sk',st:'Open',loc:'P1',src:'Sheet markup',pri:'Medium',desc:'Cable tray drops below the minimum clearance under the beam.',link:{kind:'sheet',sheet:'E-301',x:380,y:360}},
+      {n:'CI-085',t:'Plumbing stack offset through transfer slab',trade:'Plumbing',to:'mp',by:'tm',st:'Resolved',loc:'Level 3',src:'Clash: HVAC vs Structural',pri:'Low',desc:'Stack offset coordinated and resolved in model revision 4.',link:{kind:'model',mkey:'Building-Structural',guid:G.chimney,point:[8.05,2.2,-7.6]}}],
     reviews:[
       {n:'DR-007',t:'IFC set 3 – Architectural, Levels 12–22',sheets:['A-301','A-601'],due:'2026-10-15',st:'In review',bb:'482-115-903',
         rv:[{id:'ar',st:'Approved'},{id:'dc',st:'Reviewing'},{id:'mp',st:'Returned'}],
@@ -277,8 +315,8 @@ const PROJECTS = {
       {n:'RFI-110',t:'Unit 31 stair stringer clearance',to:'ar',by:'sk',due:'2026-09-28',st:'Closed',imp:'None',loc:'Bldg 4',dwg:'A-410',x:600,y:300}],
     si:[{n:'SI-009',t:'Add exterior hose bib at end units',to:'ew',st:'Issued',date:'2026-10-02',cost:'Pending'}],
     cos:[{n:'CO-006',t:'Upgrade to triple-pane windows, Bldg 7–8',amt:74000,st:'Pending owner',src:'Owner change',date:'2026-10-01'},{n:'CO-005',t:'Additional site drainage at Bldg 2',amt:21800,st:'Approved',src:'Site condition',date:'2026-09-02'}],
-    ci:[{n:'CI-015',t:'Fireplace flue duct runs through roof slab – confirm penetration detail',trade:'Mechanical',to:'mp',by:'sk',st:'Open',loc:'Bldg 3 roof',src:'Clash: HVAC vs Architectural',link:{kind:'model',guid:G.duct,point:[7.9,4.55,-7.95]}},
-        {n:'CI-014',t:'Dryer vent route conflicts with floor joist, Plan B',trade:'Mechanical',to:'sk',by:'tm',st:'Open',loc:'Bldg 3',src:'Site walk',link:{kind:'sheet',sheet:'A-205',x:640,y:420}}],
+    ci:[{n:'CI-015',t:'Fireplace flue duct runs through roof slab – confirm penetration detail',trade:'Mechanical',to:'mp',by:'sk',st:'Open',loc:'Bldg 3 roof',src:'Clash: HVAC vs Architectural',pri:'High',desc:'The fireplace flue runs through the roof slab without a penetration detail.',link:{kind:'model',mkey:'Building-Hvac',guid:G.duct,point:[7.9,4.55,-7.95]}},
+        {n:'CI-014',t:'Dryer vent route conflicts with floor joist, Plan B',trade:'Mechanical',to:'sk',by:'tm',st:'Open',loc:'Bldg 3',src:'Site walk',pri:'Medium',desc:'Dryer vent route crosses a floor joist in Plan B units.',link:{kind:'sheet',sheet:'A-205',x:640,y:420}}],
     reviews:[{n:'DR-003',t:'Building 5 roof revisions',sheets:['A-205'],due:'2026-10-12',st:'In review',bb:'',rv:[{id:'ar',st:'Reviewing'}],cm:[]}],
     dwgs:[['A-205','Bldg 5 roof plan','Rev 3','2026-09-29',''],['E-101','Site lighting','Rev 2','2026-09-01',''],['A-410','Stair details','Rev 2','2026-08-11','']],
     files:mkFiles('CR').filter(f=>!/Bright|STR/.test(f.n)),
@@ -294,9 +332,10 @@ const PROJECTS = {
     files:mkFiles('LR').filter(f=>/Contract \(|Geotech|Survey/.test(f.n)), assets:[]
   }
 };
+Object.values(PROJECTS).forEach(p=>{p.plans=p.models?samplePlans():{};p.xf={};if(p.models)p.dwgs.unshift(['A-101','Level 1 floor plan','Rev 1','2026-10-05',''],['A-102','Level 2 (loft) plan','Rev 1','2026-10-05',''],['A-103','Roof plan','Rev 1','2026-10-05',''])});
 Object.values(PROJECTS).forEach(p=>{p.modelFiles = p.models?SAMPLE_MODELS.map(m=>({...m,on:true,status:'Loaded'})).concat([{key:null,file:'MEP-Federated.nwd',disc:'Federated (Navisworks)',color:'#6d6e71',status:'Needs conversion'}]):[]});
 
-let state = {proj:'TL-2401', tool:'home', as:'tm', q:'', f:'all', folder:'All files', sheet:null, vb:null, focus:null, placing:false, sel:null, isolate:false};
+let state = {proj:'TL-2401', tool:'home', as:'tm', q:'', f:'all', folder:'All files', sheet:null, vb:null, focus:null, placing:false, sel:null, isolate:false, mk:'pan', level:'all', align:null, repAll:false, cam:null, levelJump:null, citab:'details'};
 try{const s=JSON.parse(localStorage.getItem('sb-ui')||'{}'); if(PROJECTS[s.proj]) state.proj=s.proj; if(s.tool) state.tool=s.tool;}catch(e){}
 const save=()=>{try{localStorage.setItem('sb-ui',JSON.stringify({proj:state.proj,tool:state.tool}))}catch(e){}};
 const cur=()=>PROJECTS[state.proj];
@@ -306,8 +345,6 @@ const who=id=>{const p=P(id);return p?`${esc(p.name)}${p.ext?'<span class="ext">
 function pill(st,od){if(od)return '<span class="pill p-over">Overdue</span>';
   const m={Open:'p-open',Issued:'p-open','In review':'p-open',Reviewing:'p-open',Answered:'p-pend',Acknowledged:'p-pend',Returned:'p-pend','Pending owner':'p-pend','Pending pricing':'p-pend',Planned:'p-pend','Needs conversion':'p-pend',Missing:'p-over',Installed:'p-open',Ready:'p-open',Closed:'p-done',Complete:'p-done',Approved:'p-done',Resolved:'p-done',Commissioned:'p-done',Loaded:'p-done'};
   return `<span class="pill ${m[st]||'p-open'}">${esc(st==='Returned'?'Returned with comments':st)}</span>`}
-function linkChip(l){if(!l)return '<span class="muted">—</span>';
-  return l.kind==='model'?`<span class="chip" data-go-model-link="1"><i></i>3D model</span>`:`<span class="chip" data-go-sheet-link="1"><i></i>Sheet ${esc(l.sheet)}</span>`}
 
 const TOOLS=[['home','Overview','Project'],['rfis','RFIs','Project'],['si','Site instructions','Project'],['ci','Coordination issues','Coordination'],['reviews','Drawing reviews','Coordination'],['dwgs','Drawings','Documents'],['models','Models','Documents'],['files','Files','Documents'],['cos','Change orders','Financials'],['budget','Budget','Financials'],['assets','Asset register','Closeout'],['team','Project team','Admin'],['users','Users','Admin'],['profile','My profile','Admin']];
 function counts(){const p=cur();return {rfis:visible(p.rfis).filter(r=>r.st==='Open').length,ci:visible(p.ci).filter(r=>r.st==='Open').length,reviews:visReviews(p).filter(r=>r.st!=='Complete').length,si:visible(p.si).filter(r=>r.st!=='Complete').length,cos:p.cos.filter(r=>r.st!=='Approved').length,assets:p.assets.length,team:p.team.length,users:PEOPLE.length,dwgs:p.dwgs.length,models:p.modelFiles.length,files:p.files.length}}
@@ -323,13 +360,13 @@ function selects(){
 const me=()=>P(state.as);
 function visible(list){if(!me().ext) return list; return list.filter(r=>r.to===state.as||r.by===state.as)}
 function visReviews(p){if(!me().ext) return p.reviews; return p.reviews.filter(r=>r.rv.some(x=>x.id===state.as))}
-function canSee(tool){if(!me().ext) return true; return ['home','rfis','si','ci','reviews','dwgs','models','files','team','profile'].includes(tool)}
+function canSee(tool){if(!me().ext) return true; return ['home','rfis','si','ci','reviews','dwgs','models','files','team','profile','cireport'].includes(tool)}
 
 function view(){
   rail(); save();
   const v=document.getElementById('view'), p=cur();
   if(!canSee(state.tool)){state.tool='home'}
-  const r={home,rfis,si,ci,reviews,dwgs,models,files,cos,budget,assets,team,users,profile}[state.tool];
+  const r={home,rfis,si,ci,reviews,dwgs,models,files,cos,budget,assets,team,users,profile,cireport}[state.tool];
   v.innerHTML=r(p);
   if(state.tool==='dwgs') attachSheet();
   if(state.tool==='models') mountViewer();
@@ -353,7 +390,7 @@ function home(p){
   </div>
   <div class="tiles">
     <button class="tile" data-tool="rfis"><div class="k">Open RFIs</div><div class="v">${open.length}</div><div class="n">${od.length?`<b>${od.length} overdue</b>`:'None overdue'}</div></button>
-    <button class="tile" data-tool="ci"><div class="k">Coordination issues</div><div class="v">${visible(p.ci).filter(c=>c.st==='Open').length}</div><div class="n">${visible(p.ci).filter(c=>c.st==='Open'&&c.link?.kind==='model').length} linked to the 3D model</div></button>
+    <button class="tile" data-tool="ci"><div class="k">Coordination issues</div><div class="v">${visible(p.ci).filter(c=>c.st==='Open').length}</div><div class="n">${visible(p.ci).filter(c=>c.st==='Open'&&worldOf(p,c)).length} located in the 3D model</div></button>
     <button class="tile" data-tool="reviews"><div class="k">Drawing reviews</div><div class="v">${revs.length}</div><div class="n">${revs.filter(overdue).length?`<b>${revs.filter(overdue).length} overdue</b>`:'in progress'}</div></button>
     ${ext?'':`<button class="tile" data-tool="cos"><div class="k">Pending change orders</div><div class="v">${pendCO.length}</div><div class="n">${money(pendAmt)} exposure</div></button>
     <button class="tile" data-tool="budget"><div class="k">Committed vs budget</div><div class="v">${bud?Math.round(com/bud*100):0}%</div><div class="n">${money(bud)} budget</div></button>`}
@@ -380,13 +417,13 @@ function rfis(p){const L=apply(visible(p.rfis),r=>overdue(r)?'Overdue':r.st);
   ${L.map(r=>`<tr data-open="rfis:${r.n}"><td class="num">${r.n}</td><td>${esc(r.t)}<div class="muted">${esc(r.loc)}</div></td><td>${who(r.to)}</td><td class="num">${fmt(r.due)}</td><td>${esc(r.imp)}</td><td><span class="chip" data-go-sheet="${r.dwg}:${r.x}:${r.y}:${r.n}"><i></i>Sheet ${r.dwg}</span></td><td>${pill(r.st,overdue(r))}</td></tr>`).join('')||'<tr><td colspan="7" class="muted">No RFIs match.</td></tr>'}
   </tbody></table></div>`}
 
-function ci(p){const L=apply(visible(p.ci),r=>r.st);
-  return `${hdr('Coordination issues','Clashes and design issues, each linked to the exact spot in the 3D model or on a drawing sheet.',`<button class="btn" data-tool="models">Create from model</button><button class="btn" data-tool="dwgs">Create on a sheet</button>`)}
+function ci(p){const L=apply(visible(p.ci),r=>r.st);const ext=me().ext;
+  return `${hdr('Coordination issues','Clashes and design issues. Each one is placed on the drawings and, where the sheet is aligned, in the 3D model.',`<button class="btn pri" data-tool="cireport">Issue report</button>${ext?'':'<button class="btn" data-tool="models">Create in model</button><button class="btn" data-mk-go="cloud">Mark up a sheet</button>'}`)}
   ${filterBar(['all','Open','Resolved'])}
-  <div class="tbl"><table><thead><tr><th>No.</th><th>Issue</th><th>Trade</th><th>Assigned to</th><th>Location</th><th>Status</th></tr></thead><tbody>
-  ${L.map(r=>`<tr data-open="ci:${r.n}"><td class="num">${r.n}</td><td>${esc(r.t)}<div class="muted">${esc(r.loc)} · ${esc(r.src)}</div></td><td>${esc(r.trade)}</td><td>${who(r.to)}</td><td data-ci="${r.n}">${linkChip(r.link)}</td><td>${pill(r.st)}</td></tr>`).join('')||'<tr><td colspan="6" class="muted">No coordination issues on this project.</td></tr>'}
+  <div class="tbl"><table><thead><tr><th>No.</th><th>Title</th><th>Priority</th><th>Assignee</th><th>Location</th><th>Status</th></tr></thead><tbody>
+  ${L.map(r=>{const lv=levelOfIssue(p,r);return `<tr data-open="ci:${r.n}"><td class="num">${r.n}</td><td>${esc(r.t)}<div class="muted">${esc(r.loc||'')}${lv&&!(r.loc||'').includes(lv.level)?' · '+esc(lv.level):''}</div></td><td>${priPill(r.pri)}</td><td>${who(r.to)}</td><td>${locChips(p,r)}</td><td>${pill(r.st)}</td></tr>`}).join('')||'<tr><td colspan="6" class="muted">No coordination issues on this project.</td></tr>'}
   </tbody></table></div>
-  <p class="note">Click a location chip to jump straight to the issue: the 3D model flies to the clashing element and highlights it, or the drawing zooms to the pin.</p>`}
+  <p class="note">Location chips jump straight to the issue: the drawing zooms to its pin or callout, and the 3D model flies to the spot. Issues created in the model appear on the aligned level plan automatically, and the other way round.</p>`}
 
 function reviews(p){const L=apply(visReviews(p),r=>overdue(r)?'Overdue':r.st);
   return `${hdr('Drawing reviews','Send a drawing package to consultants and trades, track each reviewer, and turn comments into coordination issues.',me().ext?'':'<button class="btn pri" data-new="review">Start a review</button>')}
@@ -418,7 +455,6 @@ function budget(p){const t=p.budget.reduce((a,b)=>[a[0]+b[1],a[1]+b[2],a[2]+b[3]
   </tbody></table></div>
   <p class="note">Cost codes follow the Yardi job cost structure so budgets, commitments and invoices sync without remapping.</p>`}
 
-/* ---------- Drawings: sheet viewer with pins, zoom/pan, and click-to-place issues ---------- */
 function hash(s){let h=7;for(const c of s)h=(h*31+c.charCodeAt(0))>>>0;return h}
 function sheetPlan(code){
   const h=hash(code), cols=5+(h%2), rows=4, x0=70,y0=70,W=740,H=520, cw=W/(cols-1), rh=H/(rows-1);
@@ -440,94 +476,239 @@ function sheetPlan(code){
   <text x="858" y="600" font-size="11" fill="var(--sheet-ink)">${esc(cur().name.toUpperCase())}</text><text x="858" y="660" font-size="30" font-weight="600" fill="var(--sheet-ink)">${code}</text></g>`;
   return s;
 }
-function pinsFor(code){const p=cur();const out=[];
-  visible(p.rfis).filter(r=>r.dwg===code).forEach(r=>out.push({id:'rfis:'+r.n,x:r.x,y:r.y,label:r.n.split('-')[1],kind:'rfi'}));
-  visible(p.ci).filter(c=>c.link?.kind==='sheet'&&c.link.sheet===code).forEach(c=>out.push({id:'ci:'+c.n,x:c.link.x,y:c.link.y,label:c.n.split('-')[1],kind:'ci'}));
-  visReviews(p).forEach(r=>r.cm.forEach((c,i)=>{if(c.sheet===code)out.push({id:'reviews:'+r.n,x:c.x,y:c.y,label:'C'+(i+1),kind:'cm'})}));
+/* ---------- Levels, plans and sheet ↔ model alignment ---------- */
+const PRI=['Critical','High','Medium','Low'];
+const priPill=pr=>`<span class="pill ${pr==='Critical'?'p-over':pr==='High'?'p-pend':pr==='Low'?'p-low':'p-open'}">${esc(pr||'Medium')}</span>`;
+function PLAN_MAP(x,z){return [150+(x-2.5)*80,80+(z+9.6)*80]} // model metres -> sheet units on the generated sample plans
+function samplePlans(){const c=[{s:PLAN_MAP(3,-9),m:[3,-9]},{s:PLAN_MAP(8.5,-3.5),m:[8.5,-3.5]}];
+  return {'A-101':{level:'Level 1',elev:0,cut:1.2,gen:true,cal:c},'A-102':{level:'Level 2 (loft)',elev:2.5,cut:3.7,gen:true,cal:c},'A-103':{level:'Roof',elev:4.3,gen:true,cal:c}}}
+// Two picked point pairs give a similarity transform (scale + rotation + shift) between sheet units and model X/Z
+function calOf(pl){if(!pl||!pl.cal||pl.cal.length<2)return null;const [A,B]=pl.cal;
+  const ds=[B.s[0]-A.s[0],B.s[1]-A.s[1]],dm=[B.m[0]-A.m[0],B.m[1]-A.m[1]],den=ds[0]*ds[0]+ds[1]*ds[1];if(!den)return null;
+  const a=[(dm[0]*ds[0]+dm[1]*ds[1])/den,(dm[1]*ds[0]-dm[0]*ds[1])/den];
+  return {a,b:[A.m[0]-(a[0]*A.s[0]-a[1]*A.s[1]),A.m[1]-(a[0]*A.s[1]+a[1]*A.s[0])]}}
+const s2w=(c,[x,y])=>[c.a[0]*x-c.a[1]*y+c.b[0],c.a[0]*y+c.a[1]*x+c.b[1]];
+function w2s(c,[X,Z]){const u=X-c.b[0],v=Z-c.b[1],d=c.a[0]*c.a[0]+c.a[1]*c.a[1];return [(u*c.a[0]+v*c.a[1])/d,(v*c.a[0]-u*c.a[1])/d]}
+function levels(p){return Object.entries(p.plans||{}).filter(([k,pl])=>calOf(pl)).map(([k,pl])=>({code:k,...pl})).sort((a,b)=>a.elev-b.elev)}
+function levelFor(p,y){const ls=levels(p);if(!ls.length)return null;let r=ls[0];for(const l of ls)if(y>=l.elev-0.05)r=l;return r}
+function levelTop(p,L){const ls=levels(p),i=ls.findIndex(l=>l.code===L.code);return ls[i+1]?ls[i+1].elev:null}
+function xfApply(t,pt){if(!t)return pt.slice();const r=(+t.rot||0)*Math.PI/180,c=Math.cos(r),s=Math.sin(r);return [c*pt[0]+s*pt[2]+(+t.x||0),pt[1]+(+t.y||0),-s*pt[0]+c*pt[2]+(+t.z||0)]}
+// Where an issue sits in the model (world coordinates) and on the drawings, whichever side it was created on
+function worldOf(p,c){const l=c.link;if(!l)return null;
+  if(l.point)return l.mkey?xfApply(p.xf&&p.xf[l.mkey],l.point):l.point;
+  if(l.sheet){const pl=p.plans&&p.plans[l.sheet],cc=calOf(pl);if(cc){const [X,Z]=s2w(cc,[l.x,l.y]);return [X,pl.elev+1.0,Z]}}
+  return null}
+function sheetOf(p,c){const l=c.link;if(!l)return null;
+  if(l.sheet)return {sheet:l.sheet,x:l.x,y:l.y,cloud:l.cloud};
+  const w=worldOf(p,c);if(!w)return null;const L=levelFor(p,w[1]);if(!L)return null;
+  const [x,y]=w2s(calOf(L),[w[0],w[2]]);return {sheet:L.code,x:Math.round(x),y:Math.round(y),proj:true}}
+function levelOfIssue(p,c){const w=worldOf(p,c);if(w)return levelFor(p,w[1]);const l=c.link;return l&&l.sheet&&p.plans&&p.plans[l.sheet]?{code:l.sheet,...p.plans[l.sheet]}:null}
+function locChips(p,c){const s=sheetOf(p,c),w=worldOf(p,c);
+  return `<div class="btns" style="gap:6px">${s?`<span class="chip" data-go-ci-sheet="${c.n}"><i></i>Sheet ${esc(s.sheet)}</span>`:''}${w?`<span class="chip" data-go-ci-model="${c.n}"><i></i>3D model</span>`:''}${!s&&!w?'<span class="muted">—</span>':''}</div>`}
+
+/* ---------- Drawing content: generated level plans (from the sample model) and generic sheets ---------- */
+let SAMPLE=null;const planCache={};
+function loadSample(){if(SAMPLE)return Promise.resolve(SAMPLE);return fetch('sample-models.json').then(r=>r.json()).then(j=>{SAMPLE=j;window.__SAMPLE=j;return j})}
+function hull(pts){pts.sort((a,b)=>a[0]-b[0]||a[1]-b[1]);const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);const lo=[],up=[];
+  for(const q of pts){while(lo.length>=2&&cr(lo.at(-2),lo.at(-1),q)<=0)lo.pop();lo.push(q)}
+  for(let i=pts.length-1;i>=0;i--){const q=pts[i];while(up.length>=2&&cr(up.at(-2),up.at(-1),q)<=0)up.pop();up.push(q)}
+  return lo.slice(0,-1).concat(up.slice(0,-1))}
+function planGeom(p,code){const key=state.proj+'|'+code;if(planCache[key])return planCache[key];if(!SAMPLE)return null;
+  const pl=p.plans[code],cut=[],below=[];
+  p.modelFiles.filter(m=>m.key&&SAMPLE[m.key]).forEach(m=>SAMPLE[m.key].forEach(e=>{let y0=1e9,y1=-1e9;const pts=[];
+    for(let k=0;k<e.pos.length;k+=3){const y=e.pos[k+1];if(y<y0)y0=y;if(y>y1)y1=y;pts.push([+e.pos[k].toFixed(2),+e.pos[k+2].toFixed(2)])}
+    const poly=hull(pts).map(([x,z])=>PLAN_MAP(x,z).map(v=>+v.toFixed(1)));
+    if(pl.cut!=null){if(y0<=pl.cut&&y1>=pl.cut)cut.push(poly);else if(y1<pl.cut&&y1>pl.elev-0.3&&y0>=pl.elev-0.45)below.push(poly)}
+    else if(y1>pl.elev)below.push(poly)}));
+  const all=cut.concat(below).flat();const bb=all.length?[Math.min(...all.map(q=>q[0])),Math.min(...all.map(q=>q[1])),Math.max(...all.map(q=>q[0])),Math.max(...all.map(q=>q[1]))]:[0,0,1000,700];
+  return planCache[key]={cut,below,bb}}
+function frameSVG(code,title){return `<rect x="0" y="0" width="1000" height="700" fill="var(--sheet)"/><rect x="20" y="20" width="960" height="660" fill="none" stroke="var(--sheet-ink)" stroke-width="2"/>
+  <g><line x1="845" y1="20" x2="845" y2="680" stroke="var(--sheet-ink)" stroke-width="2"/><rect x="858" y="34" width="110" height="18" fill="#788da4"/><text x="913" y="47" font-size="11" text-anchor="middle" fill="#fff" font-weight="600" letter-spacing="2">TOWNLINE</text>
+  ${title?`<text x="858" y="560" font-size="11" fill="var(--sheet-ink)" font-weight="600">${esc(title.toUpperCase())}</text>`:''}<text x="858" y="600" font-size="11" fill="var(--sheet-ink)">${esc(cur().name.toUpperCase())}</text><text x="858" y="660" font-size="30" font-weight="600" fill="var(--sheet-ink)">${code}</text></g>`}
+function genSheetSVG(p,code){const g=planGeom(p,code),pl=p.plans[code];let s=frameSVG(code,pl.level+' plan');
+  if(!g)return s+`<text x="420" y="350" font-size="16" text-anchor="middle" fill="var(--sheet-ink)">Loading drawing…</text>`;
+  const xs=[[3.1,'1'],[5.8,'2'],[8.5,'3']],zs=[[-8.9,'A'],[-6.0,'B'],[-3.1,'C']];
+  xs.forEach(([x,l])=>{const [sx]=PLAN_MAP(x,0);s+=`<line x1="${sx}" y1="70" x2="${sx}" y2="640" stroke="var(--sheet-faint)" stroke-dasharray="12 4 2 4"/><circle cx="${sx}" cy="56" r="12" fill="var(--sheet)" stroke="var(--sheet-ink)"/><text x="${sx}" y="60" font-size="12" text-anchor="middle" fill="var(--sheet-ink)">${l}</text>`});
+  zs.forEach(([z,l])=>{const [,sy]=PLAN_MAP(0,z);s+=`<line x1="120" y1="${sy}" x2="720" y2="${sy}" stroke="var(--sheet-faint)" stroke-dasharray="12 4 2 4"/><circle cx="104" cy="${sy}" r="12" fill="var(--sheet)" stroke="var(--sheet-ink)"/><text x="104" y="${sy+4}" font-size="12" text-anchor="middle" fill="var(--sheet-ink)">${l}</text>`});
+  s+=g.below.map(q=>`<polygon points="${q.map(v=>v.join(',')).join(' ')}" fill="none" stroke="var(--sheet-ink)" stroke-width="1" stroke-opacity=".55"/>`).join('');
+  s+=g.cut.map(q=>`<polygon points="${q.map(v=>v.join(',')).join(' ')}" fill="var(--sheet-cut)" stroke="var(--sheet-ink)" stroke-width="2.2"/>`).join('');
+  s+=`<text x="160" y="676" font-size="15" font-weight="600" fill="var(--sheet-ink)" letter-spacing="1">${esc(pl.level.toUpperCase())} PLAN</text><text x="160" y="662" font-size="10" fill="var(--sheet-ink)">EL. ${pl.elev.toFixed(2)} m · generated from the federated sample model</text>
+  <g transform="translate(560 650)"><rect width="80" height="6" fill="var(--sheet-ink)"/><text x="0" y="22" font-size="10" fill="var(--sheet-ink)">0</text><text x="80" y="22" font-size="10" fill="var(--sheet-ink)" text-anchor="middle">1 m</text></g>
+  <g transform="translate(790 80)"><path d="M0 -26L9 6L0 0L-9 6Z" fill="var(--sheet-ink)"/><text x="0" y="22" font-size="11" text-anchor="middle" fill="var(--sheet-ink)">N</text></g>`;
+  return s}
+const sheetContent=(p,code)=>p.plans&&p.plans[code]&&p.plans[code].gen?genSheetSVG(p,code):sheetPlan(code);
+function cloudPath({x,y,w,h},r=11){const seg=(x0,y0,x1,y1)=>{const L=Math.hypot(x1-x0,y1-y0),n=Math.max(1,Math.round(L/(r*1.5))),dx=(x1-x0)/n,dy=(y1-y0)/n;let d='';for(let i=0;i<n;i++)d+=`a${r} ${r} 0 0 1 ${dx.toFixed(1)} ${dy.toFixed(1)}`;return d};
+  return `M${x} ${y}`+seg(x,y,x+w,y)+seg(x+w,y,x+w,y+h)+seg(x+w,y+h,x,y+h)+seg(x,y+h,x,y)+'Z'}
+function calloutSVG(c,s){const cl=s.cloud,left=cl.x+cl.w+270>840,bx=left?cl.x-262:cl.x+cl.w+32,by=Math.max(30,cl.y-58),ax=left?cl.x:cl.x+cl.w,txt=(c.link.text||c.t);
+  const line2=txt.length>36?txt.slice(0,35)+'…':txt,col=c.st==='Resolved'?'var(--good)':'#c0392b';
+  return `<g data-open="ci:${c.n}" style="cursor:pointer"><path d="${cloudPath(cl)}" fill="${col}" fill-opacity=".06" stroke="${col}" stroke-width="2.4"/>
+  <line x1="${ax}" y1="${cl.y}" x2="${left?bx+230:bx}" y2="${by+23}" stroke="${col}" stroke-width="1.6"/>
+  <rect x="${bx}" y="${by}" width="230" height="46" rx="3" fill="#ffffff" stroke="${col}" stroke-width="1.6"/>
+  <text x="${bx+10}" y="${by+18}" font-size="12" font-weight="600" fill="${col}">${c.n} · ${esc(c.pri||'Medium')}</text><text x="${bx+10}" y="${by+36}" font-size="11.5" fill="#231f20">${esc(line2)}</text></g>`}
+function issuePin(c,s){const col=c.st==='Resolved'?'var(--good)':'#c0392b',x=s.x,y=s.y;
+  return `<g data-open="ci:${c.n}" style="cursor:pointer">${s.proj?`<circle cx="${x}" cy="${y}" r="22" fill="none" stroke="${col}" stroke-width="1.5" stroke-dasharray="4 3"/>`:''}<path d="M${x} ${y-16}L${x+16} ${y}L${x} ${y+16}L${x-16} ${y}Z" fill="${col}"/><text x="${x}" y="${y+4}" font-size="10" text-anchor="middle" fill="#fff" font-weight="600">${c.n.split('-')[1]}</text></g>`}
+function markupsSVG(p,code){let out='';
+  visible(p.rfis).filter(r=>r.dwg===code).forEach(r=>{out+=`<g data-open="rfis:${r.n}" style="cursor:pointer"><circle cx="${r.x}" cy="${r.y}" r="14" fill="#455a79"/><text x="${r.x}" y="${r.y+4}" font-size="10" text-anchor="middle" fill="#fff" font-weight="600">${r.n.split('-')[1]}</text></g>`});
+  visReviews(p).forEach(r=>r.cm.forEach((c,i)=>{if(c.sheet===code)out+=`<g data-open="reviews:${r.n}" style="cursor:pointer"><rect x="${c.x-14}" y="${c.y-12}" width="28" height="24" rx="3" fill="#a1742a"/><text x="${c.x}" y="${c.y+4}" font-size="10" text-anchor="middle" fill="#fff" font-weight="600">C${i+1}</text></g>`}));
+  const placed=[];visible(p.ci).forEach(c=>{let s=sheetOf(p,c);if(!s||s.sheet!==code)return;if(s.cloud){out+=calloutSVG(c,s);return}
+    while(placed.some(q=>Math.hypot(q[0]-s.x,q[1]-s.y)<26))s={...s,x:s.x+30};placed.push([s.x,s.y]);out+=issuePin(c,s)});
   return out}
-function pinSVG(pn){
-  if(pn.kind==='ci')return `<g data-open="${pn.id}" style="cursor:pointer"><path d="M${pn.x} ${pn.y-16}L${pn.x+16} ${pn.y}L${pn.x} ${pn.y+16}L${pn.x-16} ${pn.y}Z" fill="var(--crit)"/><text x="${pn.x}" y="${pn.y+4}" font-size="10" text-anchor="middle" fill="#fff" font-weight="600">${pn.label}</text></g>`;
-  if(pn.kind==='cm')return `<g data-open="${pn.id}" style="cursor:pointer"><rect x="${pn.x-14}" y="${pn.y-12}" width="28" height="24" rx="3" fill="var(--warn)"/><text x="${pn.x}" y="${pn.y+4}" font-size="10" text-anchor="middle" fill="#fff" font-weight="600">${pn.label}</text></g>`;
-  return `<g data-open="${pn.id}" style="cursor:pointer"><circle cx="${pn.x}" cy="${pn.y}" r="14" fill="var(--accent)"/><text x="${pn.x}" y="${pn.y+4}" font-size="10" text-anchor="middle" fill="var(--accent-ink)" font-weight="600">${pn.label}</text></g>`}
+function snippetSVG(p,s,c,wd=420){let cx=s.x,cy=s.y,w=wd;if(s.cloud){cx=s.cloud.x+s.cloud.w/2;cy=s.cloud.y+s.cloud.h/2;w=Math.max(wd,s.cloud.w+560)}const h=w*0.62;
+  return `<svg viewBox="${(cx-w/2).toFixed(0)} ${(cy-h/2).toFixed(0)} ${w.toFixed(0)} ${h.toFixed(0)}" role="img" aria-label="${esc(c.n)} on sheet ${esc(s.sheet)}" style="width:100%;display:block;background:var(--sheet);border:1px solid var(--line);border-radius:6px">${sheetContent(p,s.sheet)}${markupsSVG(p,s.sheet)}${s.cloud?'':`<circle class="focusring" cx="${s.x}" cy="${s.y}" r="24"/>`}</svg>`}
+
+/* ---------- Drawings page: sheet viewer, markup tools, alignment ---------- */
+function alignBanner(){const a=state.align;if(!a)return '';const step=a.s.length<2?`Click point ${'AB'[a.s.length]} on sheet ${esc(a.sheet)}`:`Now click the same point ${'AB'[a.m.length]} in the 3D model`;
+  return `<div class="banner"><div><b>Aligning ${esc(a.sheet)} to ${esc(a.level)}</b> · Step ${a.s.length+a.m.length+1} of 4: ${step}. Pick two points that are easy to find in both, such as grid intersections or building corners.</div><div class="btns">${a.s.length===2&&state.tool!=='models'?'<button class="btn sm pri" data-tool="models">Go to model</button>':''}<button class="btn sm" data-align-cancel="1">Cancel</button></div></div>`}
 function dwgs(p){
   if(!state.sheet||!p.dwgs.find(x=>x[0]===state.sheet))state.sheet=p.dwgs[0]?.[0];
-  const dw=p.dwgs.find(x=>x[0]===state.sheet);
-  const vb=state.vb||[0,0,1000,700];
-  return `${hdr('Drawings','Current sheet set with RFI, coordination issue and review comment pins.','<button class="btn" data-new="upload">Upload sheets</button>')}
-  <div class="work"><div class="side"><div class="sheetlist">${p.dwgs.map(([c,t,rev])=>`<button data-sheet="${c}" class="${c===state.sheet?'on':''}"><b class="num">${c}</b> · ${esc(rev)}<div class="muted">${esc(t)}</div></button>`).join('')}</div>
-    <div class="card"><h3>Legend</h3><div class="list" style="margin-top:6px"><div class="li"><span><svg width="16" height="16" viewBox="-16 -16 32 32" aria-hidden="true"><circle r="14" fill="var(--accent)"/></svg> RFI</span></div><div class="li"><span><svg width="16" height="16" viewBox="-16 -16 32 32" aria-hidden="true"><path d="M0 -16L16 0L0 16L-16 0Z" fill="var(--crit)"/></svg> Coordination issue</span></div><div class="li"><span><svg width="16" height="16" viewBox="-16 -16 32 32" aria-hidden="true"><rect x="-14" y="-12" width="28" height="24" rx="3" fill="var(--warn)"/></svg> Review comment</span></div></div></div></div>
-  <div class="stage">${dw?`<div class="toolbar"><div><b class="num">${dw[0]}</b> · ${esc(dw[1])} <span class="muted">· ${esc(dw[2])}, published ${fmt(dw[3])}</span></div>
-    <div class="btns"><button class="btn sm" data-zoom="in" aria-label="Zoom in">+</button><button class="btn sm" data-zoom="out" aria-label="Zoom out">−</button><button class="btn sm" data-zoom="fit">Fit</button>
-    <button class="btn sm ${state.placing?'on':''}" data-place="1">${state.placing?'Click the sheet to place…':'Add coordination issue'}</button>
-    <button class="btn sm" data-toast="${dw[4]?'In production this opens Bluebeam Studio session '+dw[4]+'.':'In production this links a Bluebeam Studio session to the sheet.'}">${dw[4]?'Open in Bluebeam':'Link Bluebeam session'}</button></div></div>
-    <div class="sheetwrap ${state.placing?'placing':''}" id="sheetwrap"><svg id="sheetsvg" viewBox="${vb.join(' ')}" role="img" aria-label="Sheet ${dw[0]}">${sheetPlan(dw[0])}${pinsFor(dw[0]).map(pinSVG).join('')}${state.focus?.kind==='sheet'?`<circle class="focusring" cx="${state.focus.x}" cy="${state.focus.y}" r="22"/>`:''}</svg></div>`:'<div class="card muted">No sheets uploaded yet.</div>'}</div></div>`}
+  const dw=p.dwgs.find(x=>x[0]===state.sheet),pl=p.plans&&p.plans[state.sheet],aligned=!!calOf(pl);
+  const vb=state.vb||[0,0,1000,700],ext=me().ext;
+  return `${hdr('Drawings','Current sheet set. Mark up sheets with callouts and issue pins; aligned plans connect to the 3D model.','<button class="btn" data-new="upload">Upload sheets</button>')}
+  ${alignBanner()}
+  <div class="work"><div class="side"><div class="sheetlist">${p.dwgs.map(([c,t,rev])=>{const L=p.plans&&p.plans[c]&&calOf(p.plans[c])?p.plans[c].level:'';return `<button data-sheet="${c}" class="${c===state.sheet?'on':''}"><b class="num">${c}</b> · ${esc(rev)}${L?` <span class="lvl">${esc(L)}</span>`:''}<div class="muted">${esc(t)}</div></button>`}).join('')}</div>
+    <div class="card"><h3>Legend</h3><div class="list" style="margin-top:6px">
+      <div class="li"><span><svg width="16" height="16" viewBox="-16 -16 32 32" aria-hidden="true"><circle r="14" fill="#455a79"/></svg> RFI</span></div>
+      <div class="li"><span><svg width="16" height="16" viewBox="-16 -16 32 32" aria-hidden="true"><path d="M0 -16L16 0L0 16L-16 0Z" fill="#c0392b"/></svg> Coordination issue pin</span></div>
+      <div class="li"><span><svg width="16" height="16" viewBox="-16 -16 32 32" aria-hidden="true"><path d="M0 -16L16 0L0 16L-16 0Z" fill="#c0392b"/><circle r="15" fill="none" stroke="#c0392b" stroke-dasharray="4 3"/></svg> Issue created in the 3D model</span></div>
+      <div class="li"><span><svg width="18" height="16" viewBox="0 0 36 32" aria-hidden="true"><path d="${cloudPath({x:4,y:6,w:28,h:20},5)}" fill="none" stroke="#c0392b" stroke-width="2"/></svg> Callout (revision cloud)</span></div>
+      <div class="li"><span><svg width="16" height="16" viewBox="-16 -16 32 32" aria-hidden="true"><rect x="-14" y="-12" width="28" height="24" rx="3" fill="#a1742a"/></svg> Review comment</span></div></div></div></div>
+  <div class="stage">${dw?`<div class="toolbar"><div><b class="num">${dw[0]}</b> · ${esc(dw[1])} <span class="muted">· ${esc(dw[2])}${aligned?` · aligned to ${esc(pl.level)}`:''}</span></div>
+    <div class="btns">${ext?'':`<div class="seg" role="group" aria-label="Markup tool"><button class="${state.mk==='pan'?'on':''}" data-mk="pan">Pan</button><button class="${state.mk==='cloud'?'on':''}" data-mk="cloud">Callout</button><button class="${state.mk==='pin'?'on':''}" data-mk="pin">Issue pin</button></div>`}
+    <button class="btn sm" data-zoom="in" aria-label="Zoom in">+</button><button class="btn sm" data-zoom="out" aria-label="Zoom out">−</button><button class="btn sm" data-zoom="fit">Fit</button>
+    ${aligned?`<button class="btn sm" data-level-3d="${esc(pl.level)}">View level in 3D</button>`:''}${ext?'':`<button class="btn sm" data-align-start="${dw[0]}">${aligned?'Re-align':'Align to model'}</button>`}
+    <button class="btn sm" data-toast="${dw[4]?'In production this opens Bluebeam Studio session '+dw[4]+'.':'In production this links a Bluebeam Studio session to the sheet.'}">${dw[4]?'Open in Bluebeam':'Link Bluebeam'}</button></div></div>
+    <div class="sheetwrap mk-${state.mk}${state.align&&state.align.sheet===dw[0]&&state.align.s.length<2?' mk-pin':''}" id="sheetwrap"><svg id="sheetsvg" viewBox="${vb.join(' ')}" role="img" aria-label="Sheet ${dw[0]}">${sheetContent(p,dw[0])}${markupsSVG(p,dw[0])}
+    ${state.align&&state.align.sheet===dw[0]?state.align.s.map((q,i)=>`<g><circle cx="${q[0]}" cy="${q[1]}" r="10" fill="#2f6fb0"/><text x="${q[0]}" y="${q[1]+4}" font-size="11" text-anchor="middle" fill="#fff" font-weight="600">${'AB'[i]}</text></g>`).join(''):''}
+    ${state.focus&&state.focus.kind==='sheet'?`<circle class="focusring" cx="${state.focus.x}" cy="${state.focus.y}" r="24"/>`:''}<rect id="tmprect" x="0" y="0" width="0" height="0" fill="none" stroke="#c0392b" stroke-width="2" stroke-dasharray="6 4"/></svg></div>
+    <div class="hint muted">${state.mk==='cloud'?'Drag a box around the area to draw a revision cloud with a callout.':state.mk==='pin'?'Click the spot to drop a coordination issue pin.':'Drag to pan · scroll to zoom · click any pin or callout to open it.'}</div>`:'<div class="card muted">No sheets uploaded yet.</div>'}</div></div>`}
+function svgPt(svg,e){const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(svg.getScreenCTM().inverse());return [Math.round(q.x),Math.round(q.y)]}
 function attachSheet(){
-  const svg=document.getElementById('sheetsvg'); if(!svg)return;
-  let drag=null;
-  svg.addEventListener('pointerdown',e=>{if(state.placing||e.target.closest('[data-open]'))return;drag={x:e.clientX,y:e.clientY,vb:svg.viewBox.baseVal};svg.setPointerCapture(e.pointerId)});
-  svg.addEventListener('pointermove',e=>{if(!drag)return;const r=svg.getBoundingClientRect(),k=drag.vb.width/r.width;svg.setAttribute('viewBox',[drag.vb.x-(e.clientX-drag.x)*k,drag.vb.y-(e.clientY-drag.y)*k,drag.vb.width,drag.vb.height].join(' '));drag.moved=true});
-  svg.addEventListener('pointerup',e=>{if(drag){const b=svg.viewBox.baseVal;state.vb=[b.x,b.y,b.width,b.height];drag=null;return}});
-  svg.addEventListener('click',e=>{if(!state.placing)return;const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const q=pt.matrixTransform(svg.getScreenCTM().inverse());
-    state.placing=false;pendingLink={kind:'sheet',sheet:state.sheet,x:Math.round(q.x),y:Math.round(q.y)};form('ci')});
+  const svg=document.getElementById('sheetsvg');if(!svg)return;
+  let drag=null,box=null;const tmp=document.getElementById('tmprect');
+  svg.addEventListener('pointerdown',e=>{if(e.target.closest('[data-open]')&&state.mk==='pan')return;
+    if(state.align&&state.align.sheet===state.sheet&&state.align.s.length<2)return;
+    if(state.mk==='cloud'){box={s:svgPt(svg,e)};svg.setPointerCapture(e.pointerId);return}
+    if(state.mk==='pin')return;
+    drag={x:e.clientX,y:e.clientY,vb:svg.viewBox.baseVal};svg.setPointerCapture(e.pointerId)});
+  svg.addEventListener('pointermove',e=>{
+    if(box){const q=svgPt(svg,e),x=Math.min(q[0],box.s[0]),y=Math.min(q[1],box.s[1]);box.r={x,y,w:Math.abs(q[0]-box.s[0]),h:Math.abs(q[1]-box.s[1])};tmp.setAttribute('x',x);tmp.setAttribute('y',y);tmp.setAttribute('width',box.r.w);tmp.setAttribute('height',box.r.h);return}
+    if(!drag)return;const r=svg.getBoundingClientRect(),k=drag.vb.width/r.width;svg.setAttribute('viewBox',[drag.vb.x-(e.clientX-drag.x)*k,drag.vb.y-(e.clientY-drag.y)*k,drag.vb.width,drag.vb.height].join(' '))});
+  svg.addEventListener('pointerup',e=>{
+    if(box){const r=box.r;box=null;tmp.setAttribute('width',0);tmp.setAttribute('height',0);
+      if(!r||r.w<16||r.h<16){toast('Drag a larger box to draw a callout');return}
+      pendingLink={kind:'sheet',sheet:state.sheet,x:Math.round(r.x+r.w/2),y:Math.round(r.y+r.h/2),cloud:{x:r.x,y:r.y,w:r.w,h:r.h}};
+      form('ci',{loc:(cur().plans&&cur().plans[state.sheet]?cur().plans[state.sheet].level+' · ':'')+'Sheet '+state.sheet});return}
+    if(drag){const b=svg.viewBox.baseVal;state.vb=[b.x,b.y,b.width,b.height];drag=null}});
+  svg.addEventListener('click',e=>{
+    const a=state.align;if(a&&a.sheet===state.sheet&&a.s.length<2){a.s.push(svgPt(svg,e));view();if(a.s.length===2)toast('Both sheet points picked. Now pick the same two points in the 3D model.');return}
+    if(state.mk!=='pin'||e.target.closest('[data-open]'))return;const q=svgPt(svg,e);
+    pendingLink={kind:'sheet',sheet:state.sheet,x:q[0],y:q[1]};form('ci',{loc:(cur().plans&&cur().plans[state.sheet]?cur().plans[state.sheet].level+' · ':'')+'Sheet '+state.sheet})});
   svg.addEventListener('wheel',e=>{e.preventDefault();zoomSheet(e.deltaY<0?0.85:1/0.85)},{passive:false});
 }
 function zoomSheet(k){const svg=document.getElementById('sheetsvg');const b=svg.viewBox.baseVal;const cx=b.x+b.width/2,cy=b.y+b.height/2,w=Math.min(1000,Math.max(120,b.width*k)),h=w*0.7;state.vb=[cx-w/2,cy-h/2,w,h];svg.setAttribute('viewBox',state.vb.join(' '))}
-function goSheet(code,x,y,id){state.tool='dwgs';state.sheet=code;state.vb=[x-160,y-112,320,224];state.focus={kind:'sheet',x,y,id};closeDrawer();view();setTimeout(()=>{if(state.focus?.kind==='sheet')state.focus=null},4500)}
+function goSheet(code,x,y,id){state.tool='dwgs';state.sheet=code;state.mk='pan';state.vb=[x-160,y-112,320,224];state.focus={kind:'sheet',x,y,id};closeDrawer();view();setTimeout(()=>{if(state.focus&&state.focus.kind==='sheet')state.focus=null},4500)}
 
-/* ---------- Models: persistent 3D viewer ---------- */
-let viewerReady=null, viewerHost=null, pendingLink=null;
+/* ---------- Models page: persistent 3D viewer, levels, minimap, model positioning ---------- */
+let viewerReady=null,pendingLink=null;
 function loadViewerLib(){
   if(viewerReady)return viewerReady;
   viewerReady=new Promise((res,rej)=>{const s=document.createElement('script');s.src='viewer.js';s.onload=()=>res(window.TLViewer);s.onerror=()=>rej(new Error('viewer'));document.head.appendChild(s)})
-    .then(async V=>{const r=await fetch('sample-models.json');window.__SAMPLE=await r.json();return V});
+    .then(async V=>{await loadSample();return V});
   return viewerReady}
+const modelKey=m=>m.key||m.loadedName;
+const xfOf=(p,k)=>(p.xf=p.xf||{},p.xf[k]=p.xf[k]||{x:0,y:0,z:0,rot:0,locked:true});
 function models(p){
-  const ext=me().ext;
   if(!p.models&&!p.modelFiles.length)return `${hdr('Models','Federated 3D models for coordination.','<button class="btn pri" data-upload-model="1">Upload model</button>')}<div class="card">No models on this project yet. Upload an IFC file to view it in 3D.</div>${modelNote()}`;
-  const linked=visible(p.ci).filter(c=>c.link?.kind==='model');
-  return `${hdr('Models','Federated 3D model. Orbit with the mouse, click any element to inspect it, and create a coordination issue at that exact spot.','<button class="btn pri" data-upload-model="1">Upload model</button>')}
+  const linked=visible(p.ci).filter(c=>worldOf(p,c)),ls=levels(p),ext=me().ext,loaded=p.modelFiles.filter(m=>modelKey(m));
+  return `${hdr('Models','Federated 3D model. Pick a level, use the minimap to jump around, click an element to inspect it, and create coordination issues at the exact spot.','<button class="btn pri" data-upload-model="1">Upload model</button>')}
+  ${alignBanner()}
   <div class="work model">
     <div class="stage">
-      <div class="toolbar"><div class="layers">${p.modelFiles.filter(m=>m.key||m.loadedName).map(m=>`<label><input type="checkbox" data-layer="${esc(m.key||m.loadedName)}" ${m.on!==false?'checked':''}><span class="sw" style="background:${m.color}"></span>${esc(m.disc)}</label>`).join('')}</div>
-      <div class="btns"><button class="btn sm" data-v="fit">Fit</button><button class="btn sm ${state.isolate?'on':''}" data-v="isolate" ${state.sel?'':'disabled'}>Isolate</button><button class="btn sm pri" data-v="issue" ${state.sel?'':'disabled'}>Create issue here</button></div></div>
-      <div class="viewer" id="viewerSlot"><div class="loading" id="vload">Loading 3D viewer…</div><div class="hud">Drag to orbit · Right-drag to pan · Scroll to zoom</div></div>
+      <div class="toolbar"><div class="layers">${loaded.map(m=>`<label><input type="checkbox" data-layer="${esc(modelKey(m))}" ${m.on!==false?'checked':''}><span class="sw" style="background:${m.color}"></span>${esc(m.disc)}</label>`).join('')}</div>
+      <div class="btns"><button class="btn sm" data-v="fit">Fit</button><button class="btn sm ${state.isolate?'on':''}" data-v="isolate" ${state.sel?'':'disabled'}>Isolate</button>${ext?'':`<button class="btn sm pri" data-v="issue" ${state.sel?'':'disabled'}>Create issue here</button>`}</div></div>
+      ${ls.length?`<div class="toolbar levels"><span class="muted" style="font-size:12px">Levels</span><div class="seg" role="group" aria-label="Level"><button class="${state.level==='all'?'on':''}" data-level="all">All</button>${ls.map(l=>`<button class="${state.level===l.level?'on':''}" data-level="${esc(l.level)}">${esc(l.level)}</button>`).join('')}</div></div>`:''}
+      <div class="viewer" id="viewerSlot"><div class="loading" id="vload">Loading 3D viewer…</div>${ls.length?'<div class="minimap" id="minimap"></div>':''}<div class="hud">Drag to orbit · Right-drag to pan · Scroll to zoom</div></div>
     </div>
     <div class="side">
       <div class="card" id="modelPanel">${selPanel()}</div>
-      <div class="card"><h3>Issues in this model</h3><div class="list" style="margin-top:6px">${linked.map(c=>`<div class="li" data-go-model="${c.n}"><div class="t"><span class="num">${c.n}</span> ${esc(c.t)}<div class="muted">${who(c.to)}</div></div>${pill(c.st)}</div>`).join('')||'<div class="li muted">No model-linked issues yet.</div>'}</div></div>
+      <div class="card"><h3>Model position</h3><p class="muted" style="margin:6px 0 10px;font-size:12px">If a model comes in at the wrong coordinates, unlock it and move it along X, Y and Z (metres) or rotate it, then lock it again.</p>
+        ${loaded.map(m=>{const k=modelKey(m),t=xfOf(p,k),dis=t.locked||ext?'disabled':'';return `<div class="xf"><div class="xfh"><span class="sw" style="background:${m.color}"></span><b>${esc(m.disc)}</b>${ext?'':`<button class="btn sm ${t.locked?'':'on'}" data-xflock="${esc(k)}">${t.locked?'Locked':'Unlocked'}</button>`}</div>
+          <div class="xfg">${['x','y','z','rot'].map(a=>`<label for="xf-${esc(k)}-${a}">${a==='rot'?'Rotate °':a.toUpperCase()+' m'}<input id="xf-${esc(k)}-${a}" type="number" step="${a==='rot'?1:0.05}" value="${t[a]||0}" data-xf="${esc(k)}|${a}" ${dis}></label>`).join('')}</div></div>`}).join('')}</div>
+      <div class="card"><h3>Issues in this model</h3><div class="list" style="margin-top:6px">${linked.map(c=>{const L=levelOfIssue(p,c);return `<div class="li" data-go-ci-model="${c.n}"><div class="t"><span class="num">${c.n}</span> ${esc(c.t)}<div class="muted">${who(c.to)}${L?' · '+esc(L.level):''}</div></div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${priPill(c.pri)}${pill(c.st)}</div></div>`}).join('')||'<div class="li muted">No model-linked issues yet.</div>'}</div></div>
       <div class="card"><h3>Model files</h3><div class="list" style="margin-top:6px">${p.modelFiles.map(m=>`<div class="li"><div class="t"><span class="num">${esc(m.file)}</span><div class="muted">${esc(m.disc)}</div></div>${pill(m.status)}</div>`).join('')}</div></div>
     </div>
   </div>${modelNote()}`}
-function modelNote(){return `<p class="note">Sample geometry: buildingSMART International "Simple Scene" house, split into architectural, structural and HVAC IFC files (CC BY 4.0). Navisworks .nwd and .nwc files are Autodesk's closed format and can't be opened directly in the browser; in production they would be converted through Autodesk Platform Services. IFC files you upload here open right away and stay after a refresh. In this prototype they're saved in your own browser only, so other people won't see them.</p>`}
+function modelNote(){return `<p class="note">Sample geometry: buildingSMART International "Simple Scene" house, split into architectural, structural and HVAC IFC files (CC BY 4.0). The level plans A-101 to A-103 are generated from it and aligned to the model. Navisworks .nwd and .nwc files are Autodesk's closed format and can't be opened directly in the browser; in production they would be converted through Autodesk Platform Services. IFC files you upload open right away and stay after a refresh (saved in this browser only).</p>`}
 function selPanel(){const s=state.sel;if(!s)return `<h3>Selection</h3><p class="muted" style="margin:6px 0 0">Click an element in the model to see its properties.</p>`;
-  return `<h3>Selection</h3><dl class="dl" style="margin-top:8px"><dt>Name</dt><dd>${esc(s.name||'(unnamed)')}</dd><dt>IFC class</dt><dd>${esc(s.type)}</dd><dt>Discipline</dt><dd>${esc(discOf(s.model))}</dd><dt>GlobalId</dt><dd class="num">${esc(s.guid)}</dd><dt>Picked point</dt><dd class="num">${s.point?s.point.map(v=>v.toFixed(2)).join(', '):'—'}</dd></dl>`}
+  return `<h3>Selection</h3><dl class="dl" style="margin-top:8px"><dt>Name</dt><dd>${esc(s.name||'(unnamed)')}</dd><dt>IFC class</dt><dd>${esc(s.type)}</dd><dt>Discipline</dt><dd>${esc(discOf(s.model))}</dd><dt>GlobalId</dt><dd class="num">${esc(s.guid)}</dd><dt>Picked point</dt><dd class="num">${s.point?s.point.map(v=>(+v).toFixed(2)).join(', '):'—'}</dd></dl>`}
 const discOf=k=>{const m=cur().modelFiles.find(x=>x.key===k||x.loadedName===k);return m?m.disc:k};
+function refreshMarkers(){const V=window.TLViewer,p=cur();if(!V)return;
+  const lvSel=state.level!=='all'?state.level:null;
+  V.setMarkers(visible(p.ci).map(c=>({c,w:worldOf(p,c)})).filter(o=>o.w&&(!lvSel||(levelFor(p,o.w[1])||{}).level===lvSel)).map(({c,w})=>({id:c.n,label:c.n.split('-')[1],point:w,color:c.st==='Resolved'?'#3d7a57':c.pri==='Critical'?'#8e1f1f':'#c0392b'})))}
+function applyLevel(V){const p=cur(),ls=levels(p),L=ls.find(l=>l.level===state.level);V.setClip(L?levelTop(p,L)!=null?levelTop(p,L)-0.05:null:null)}
+function curMiniLevel(){const p=cur(),ls=levels(p);if(!ls.length)return null;if(state.level!=='all')return ls.find(l=>l.level===state.level)||ls[0];
+  return state.cam?levelFor(p,state.cam.t[1]):ls[0]}
+function renderMinimap(){const el=document.getElementById('minimap');if(!el)return;const p=cur(),L=curMiniLevel();if(!L){el.hidden=true;return}
+  const g=L.gen?planGeom(p,L.code):null,bb=g&&g.bb?[g.bb[0]-70,g.bb[1]-70,g.bb[2]-g.bb[0]+140,g.bb[3]-g.bb[1]+140]:[0,0,1000,700];
+  el.dataset.level=L.code;
+  el.innerHTML=`<div class="mmh"><b>${esc(L.level)}</b><span class="num">${esc(L.code)}</span></div><svg id="mmsvg" viewBox="${bb.map(v=>v.toFixed(0)).join(' ')}" role="img" aria-label="Minimap of ${esc(L.level)}">${sheetContent(p,L.code)}${markupsSVG(p,L.code)}<g id="mmcam"></g></svg><div class="mmf">Click the plan to jump there</div>`;
+  updateMiniCam()}
+function updateMiniCam(){const g=document.getElementById('mmcam'),el=document.getElementById('minimap');if(!g||!el||!state.cam)return;const p=cur(),pl=p.plans[el.dataset.level],c=calOf(pl);if(!c)return;
+  const [tx,ty]=w2s(c,[state.cam.t[0],state.cam.t[2]]),[px,py]=w2s(c,[state.cam.p[0],state.cam.p[2]]),ang=Math.atan2(ty-py,tx-px),L=46;
+  const ex=tx-Math.cos(ang)*L,ey=ty-Math.sin(ang)*L;
+  g.innerHTML=`<line x1="${ex.toFixed(1)}" y1="${ey.toFixed(1)}" x2="${tx.toFixed(1)}" y2="${ty.toFixed(1)}" stroke="#2f6fb0" stroke-width="5" stroke-linecap="round"/><circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="11" fill="#2f6fb0" stroke="#fff" stroke-width="3"/><circle cx="${tx.toFixed(1)}" cy="${ty.toFixed(1)}" r="16" fill="none" stroke="#2f6fb0" stroke-width="3"/>`}
 async function mountViewer(){
-  const slot=document.getElementById('viewerSlot'); if(!slot)return;
-  let V; try{V=await loadViewerLib()}catch(e){document.getElementById('vload').textContent='The 3D viewer could not load. Reload the page to try again.';return}
+  const slot=document.getElementById('viewerSlot');if(!slot)return;
+  let V;try{V=await loadViewerLib()}catch(e){const vl=document.getElementById('vload');if(vl)vl.textContent='The 3D viewer could not load. Reload the page to try again.';return}
   if(!document.getElementById('viewerSlot'))return;
   V.init(document.getElementById('viewerSlot'));
   V.setBackground(getComputedStyle(document.documentElement).getPropertyValue('--viewer'));
-  const vl=document.getElementById('vload'); if(vl) vl.remove();
+  const vl=document.getElementById('vload');if(vl)vl.remove();
   const p=cur();
-  // load sample models for this project; drop models from other projects
-  const want=new Set(p.modelFiles.filter(m=>m.key||m.loadedName).map(m=>m.key||m.loadedName));
+  const want=new Set(p.modelFiles.filter(modelKey).map(modelKey));
   V.modelNames().forEach(n=>{if(!want.has(n))V.removeModel(n)});
-  p.modelFiles.forEach(m=>{if(m.key&&!V.hasModel(m.key)&&window.__SAMPLE[m.key]){V.addModel(m.key,window.__SAMPLE[m.key]);m.status='Loaded'}
-    if(m.loadedName&&!V.hasModel(m.loadedName)&&m.elements){V.addModel(m.loadedName,m.elements)}
-    V.setVisible(m.key||m.loadedName,m.on!==false)});
-  V.setMarkers(visible(p.ci).filter(c=>c.link?.kind==='model'&&c.link.point).map(c=>({id:c.n,label:c.n.split('-')[1],point:c.link.point,color:c.st==='Resolved'?'#3d7a57':'#a84444'})));
-  V.onPick(hit=>{state.sel=hit;state.isolate=false;V.isolate(false);refreshModelUI()});
-  V.onMarker(id=>{detail('ci',id)});
-  if(state.focus?.kind==='model'){const f=state.focus;state.focus=null;
-    const s=V.select(f.guid); state.sel=s?{...s,point:f.point}:null; state.isolate=!!s; V.isolate(state.isolate); refreshModelUI();
-    if(f.view)V.flyTo(f.view); else if(!V.focusGuid(f.guid)) toast('That element is not in the loaded models');}
+  p.modelFiles.forEach(m=>{const k=modelKey(m);if(!k)return;
+    if(m.key&&!V.hasModel(k)&&SAMPLE&&SAMPLE[m.key]){V.addModel(k,SAMPLE[m.key]);m.status='Loaded'}
+    if(m.loadedName&&!V.hasModel(k)&&m.elements)V.addModel(k,m.elements);
+    V.setTransform(k,xfOf(p,k));V.setVisible(k,m.on!==false)});
+  applyLevel(V);refreshMarkers();
+  V.onPick(hit=>{
+    const a=state.align;if(a&&a.s.length===2&&a.m.length<2){if(!hit){toast('Click on part of the model');return}a.m.push([hit.point[0],hit.point[2]]);
+      if(a.m.length===2)finishAlign();else{toast('Point A picked. Now click point B in the model.');view()}return}
+    state.sel=hit;state.isolate=false;V.isolate(false);refreshModelUI()});
+  V.onMarker(id=>detail('ci',id));
+  V.onCamera(vp=>{const before=curMiniLevel();state.cam=vp;const after=curMiniLevel();const el=document.getElementById('minimap');
+    if(el&&(el.innerHTML===''||(after&&el.dataset.level!==after.code)))renderMinimap();else updateMiniCam()});
+  renderMinimap();
+  if(state.focus&&state.focus.kind==='model'){const c=p.ci.find(x=>x.n===state.focus.n);state.focus=null;
+    if(c){const l=c.link,w=worldOf(p,c);let s=null;if(l.guid)s=V.select(l.guid);
+      state.sel=s?{...s,point:w}:null;state.isolate=!!s;V.isolate(state.isolate);refreshModelUI();
+      if(s)V.focusGuid(l.guid);else if(w)V.lookAtPlan(w[0],w[1],w[2],6)}}
+  else if(state.levelJump){const L=levels(p).find(l=>l.level===state.levelJump);state.levelJump=null;const b=V.bounds();if(L&&b)V.lookAtPlan((b.min[0]+b.max[0])/2,L.elev+0.5,(b.min[2]+b.max[2])/2,11)}
   else if(!mountViewer.fitted){mountViewer.fitted=true;V.fit()}
 }
 function refreshModelUI(){const mp=document.getElementById('modelPanel');if(mp)mp.innerHTML=selPanel();
   document.querySelectorAll('[data-v="issue"],[data-v="isolate"]').forEach(b=>b.disabled=!state.sel);
-  const iso=document.querySelector('[data-v="isolate"]'); if(iso) iso.classList.toggle('on',state.isolate)}
-function goModel(n){const c=cur().ci.find(x=>x.n===n);if(!c?.link)return;state.tool='models';state.focus={kind:'model',...c.link};closeDrawer();view()}
+  const iso=document.querySelector('[data-v="isolate"]');if(iso)iso.classList.toggle('on',state.isolate)}
+function goModel(n){const c=cur().ci.find(x=>x.n===n);if(!c||!worldOf(cur(),c))return;state.tool='models';state.focus={kind:'model',n};closeDrawer();view()}
+function setLevel(name){state.level=name;if(name!=='all')state.levelJump=name;view()}
+function finishAlign(){const a=state.align,p=cur();p.plans=p.plans||{};const old=p.plans[a.sheet]||{};
+  p.plans[a.sheet]={...old,level:a.level,elev:a.elev,cal:[{s:a.s[0],m:a.m[0]},{s:a.s[1],m:a.m[1]}]};
+  Object.keys(planCache).forEach(k=>delete planCache[k]);state.align=null;saveData();toast(`${a.sheet} is now aligned to ${a.level}`);view()}
+
+/* ---------- Coordination issue report ---------- */
+function cireport(p){const L=visible(p.ci).filter(c=>state.repAll||c.st!=='Resolved').sort((a,b)=>PRI.indexOf(a.pri||'Medium')-PRI.indexOf(b.pri||'Medium')||a.n.localeCompare(b.n));
+  const today=TODAY.toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric',timeZone:'UTC'}),canPrint=/github\.io$/.test(location.hostname);
+  const counts=PRI.map(pr=>[pr,L.filter(c=>(c.pri||'Medium')===pr).length]).filter(x=>x[1]);
+  return `<div class="report">${hdr('Coordination issue report',`${esc(p.name)} · ${state.proj} · ${today} · prepared by ${esc(me().name)}`,`<button class="btn" data-tool="ci">Back to issues</button><button class="btn ${state.repAll?'on':''}" data-rep-all="1">${state.repAll?'Showing all issues':'Open issues only'}</button>${canPrint?'<button class="btn pri" data-print="1">Print or save as PDF</button>':''}`)}
+  <div class="repsum"><span><b>${L.length}</b> issue${L.length===1?'':'s'}</span>${counts.map(([pr,n])=>`<span>${priPill(pr)} ${n}</span>`).join('')}</div>
+  <div class="tbl"><table><thead><tr><th>No.</th><th>Title</th><th>Priority</th><th>Assignee</th><th>Level</th><th>Sheet</th><th>Status</th></tr></thead><tbody>
+  ${L.map(c=>{const s=sheetOf(p,c),lv=levelOfIssue(p,c);return `<tr data-open="ci:${c.n}"><td class="num">${c.n}</td><td>${esc(c.t)}</td><td>${priPill(c.pri)}</td><td>${who(c.to)}</td><td>${lv?esc(lv.level):'—'}</td><td class="num">${s?esc(s.sheet):'—'}</td><td>${pill(c.st)}</td></tr>`}).join('')||'<tr><td colspan="7" class="muted">No issues to report.</td></tr>'}
+  </tbody></table></div>
+  <div class="repcards">${L.map(c=>{const s=sheetOf(p,c),lv=levelOfIssue(p,c),w=worldOf(p,c);return `<article class="repcard">
+    <div class="rch"><span class="num repno">${c.n}</span>${priPill(c.pri)}${pill(c.st)}</div><h2 style="color:var(--ink)">${esc(c.t)}</h2>
+    <div class="rcb"><dl class="dl"><dt>Assignee</dt><dd>${who(c.to)}${P(c.to)?.email?`<div class="muted">${esc(P(c.to).email)}</div>`:''}</dd><dt>Trade</dt><dd>${esc(c.trade||'—')}</dd><dt>Location</dt><dd>${esc(c.loc||'—')}</dd><dt>Level</dt><dd>${lv?esc(lv.level):'—'}</dd><dt>Sheet</dt><dd class="num">${s?esc(s.sheet)+(s.proj?' (from model)':''):'—'}</dd><dt>Model point</dt><dd class="num">${w?w.map(v=>(+v).toFixed(2)).join(', '):'—'}</dd><dt>Description</dt><dd>${esc(c.desc||'—')}</dd></dl>
+    <div>${s?snippetSVG(p,s,c,380):'<div class="muted" style="padding:20px;border:1px dashed var(--line);border-radius:6px;text-align:center">No drawing location</div>'}</div></div></article>`}).join('')}</div></div>`}
 
 /* ---------- Files ---------- */
 const FOLDERS=['All files','Contracts','CAD','Models','Specifications','Reports','Permits','Uploads'];
@@ -580,13 +761,7 @@ function detail(kind,id){const p=cur();const key={rfis:'n',ci:'n',si:'n',cos:'n'
     <div class="thread"><div class="msg"><div class="m">${who(r.by)} · question</div>Please confirm the intended detail. Site has flagged a conflict with the current revision; photos attached.</div>
     ${r.st!=='Open'?`<div class="msg"><div class="m">${who(r.to)} · official response</div>Proceed per sketch SK-12 attached. No change to contract sum.</div>`:''}</div>
     ${r.st==='Open'?`<form class="f" data-respond="${r.n}"><label for="resp">Response<textarea id="resp" rows="3" required placeholder="Type a response…"></textarea></label><div class="btns"><button class="btn pri" type="submit">Send response</button>${me().ext?'':`<button class="btn" type="button" data-toco="${r.n}">Create change order</button>`}</div></form>`:''}`);
-  if(kind==='ci'){const l=r.link;
-    return openDrawer(`${CLOSE()}<h2>${r.n} · ${esc(r.t)}</h2><div>${pill(r.st)}</div>
-    <dl class="dl"><dt>Trade</dt><dd>${esc(r.trade)}</dd><dt>Assigned to</dt><dd>${who(r.to)}</dd><dt>Created by</dt><dd>${who(r.by)}</dd><dt>Location</dt><dd>${esc(r.loc)}</dd><dt>Source</dt><dd>${esc(r.src)}</dd>
-    ${l?.kind==='model'?`<dt>Model element</dt><dd class="num">${esc(l.guid)}</dd><dt>Point</dt><dd class="num">${l.point?l.point.join(', '):'—'}</dd>`:''}${l?.kind==='sheet'?`<dt>Sheet</dt><dd class="num">${esc(l.sheet)} at ${l.x}, ${l.y}</dd>`:''}</dl>
-    ${l?`<button class="btn pri" ${l.kind==='model'?`data-go-model="${r.n}"`:`data-go-sheet="${l.sheet}:${l.x}:${l.y}:${r.n}"`}>${l.kind==='model'?'Open in 3D model at this location':'Open sheet '+esc(l.sheet)+' at this location'}</button>`:''}
-    <div class="thread"><div class="msg"><div class="m">${who(r.by)} · created</div>${esc(r.t)}. Please review and propose a resolution.</div></div>
-    ${r.st==='Open'?`<button class="btn" data-resolve="${r.n}">Mark resolved</button>`:''}`)}
+  if(kind==='ci')return openDrawer(ciDrawer(p,r));
   if(kind==='reviews'){const mine=r.rv.find(x=>x.id===state.as&&x.st==='Reviewing');
     return openDrawer(`${CLOSE()}<h2>${r.n} · ${esc(r.t)}</h2><div>${pill(r.st,overdue(r))}</div>
     <dl class="dl"><dt>Due</dt><dd>${fmt(r.due)}</dd><dt>Sheets</dt><dd>${r.sheets.map(s=>`<span class="chip" data-go-sheet="${s}:500:350:">${s}</span>`).join(' ')}</dd><dt>Bluebeam</dt><dd>${r.bb?`Session ${esc(r.bb)} <button class="btn sm" data-toast="In production this opens Bluebeam Studio session ${esc(r.bb)}.">Open</button>`:'No session linked'}</dd></dl>
@@ -600,13 +775,25 @@ function detail(kind,id){const p=cur();const key={rfis:'n',ci:'n',si:'n',cos:'n'
     return openDrawer(`${CLOSE()}<h2>${r.id} · ${esc(r.name)}</h2><div>${pill(r.st)}</div><dl class="dl"><dt>Category</dt><dd>${esc(r.cat)}</dd><dt>Location</dt><dd>${esc(r.loc)}</dd><dt>Manufacturer</dt><dd>${esc(r.mfr)}</dd><dt>Model</dt><dd>${esc(r.model)}</dd><dt>Warranty to</dt><dd>${fmt(r.warr)}</dd></dl><h3>Handover checklist</h3><div class="list">${docs.map((x,i)=>`<div class="li"><span>${x}</span>${pill(i<r.docs?'Complete':'Missing')}</div>`).join('')}</div>`)}
 }
 
+function ciDrawer(p,r){const tab=state.citab||'details',sh=sheetOf(p,r),w=worldOf(p,r),lv=levelOfIssue(p,r),ext=me().ext;
+  const tabs=[['details','Details'],['location','Location'],['activity','Activity']];
+  let body='';
+  if(tab==='details')body=`<dl class="dl"><dt>Title</dt><dd>${esc(r.t)}</dd><dt>Description</dt><dd>${esc(r.desc||'—')}</dd><dt>Location</dt><dd>${esc(r.loc||'—')}</dd><dt>Assignee</dt><dd>${who(r.to)}${P(r.to)?.email?`<div class="muted">${esc(P(r.to).email)} · ${esc(P(r.to).phone||'')}</div>`:''}</dd><dt>Priority</dt><dd>${priPill(r.pri)}</dd><dt>Trade</dt><dd>${esc(r.trade||'—')}</dd><dt>Status</dt><dd>${pill(r.st)}</dd><dt>Created by</dt><dd>${who(r.by)}</dd><dt>Source</dt><dd>${esc(r.src||'—')}</dd></dl>
+    ${ext&&r.to!==state.as?'':`<div class="btns">${ext?'':`<button class="btn" data-edit-ci="${r.n}">Edit issue</button>`}${r.st==='Open'?`<button class="btn" data-resolve="${r.n}">Mark resolved</button>`:''}</div>`}`;
+  if(tab==='location')body=`<dl class="dl"><dt>Level</dt><dd>${lv?esc(lv.level):'—'}</dd><dt>Sheet</dt><dd class="num">${sh?esc(sh.sheet)+(sh.proj?' (placed from the model)':''):'—'}</dd><dt>Model point</dt><dd class="num">${w?w.map(v=>(+v).toFixed(2)).join(', '):'Not in the model'}</dd>${r.link&&r.link.guid?`<dt>Model element</dt><dd class="num">${esc(r.link.guid)}</dd>`:''}</dl>
+    ${sh?snippetSVG(p,sh,r,420):'<p class="muted">This issue has no drawing location yet.</p>'}
+    <div class="btns">${sh?`<button class="btn pri" data-go-ci-sheet="${r.n}">Open sheet ${esc(sh.sheet)} here</button>`:''}${w?`<button class="btn ${sh?'':'pri'}" data-go-ci-model="${r.n}">Open in 3D model here</button>`:''}</div>`;
+  if(tab==='activity')body=`<div class="thread"><div class="msg"><div class="m">${who(r.by)} · created ${r.link&&r.link.cloud?'callout':'issue'}</div>${esc(r.t)}. Please review and propose a resolution.</div>${r.st==='Resolved'?`<div class="msg"><div class="m">${who(r.to)} · resolved</div>Resolved and closed.</div>`:''}</div>`;
+  return `${CLOSE()}<h2>${r.n} · ${esc(r.t)}</h2><div class="btns">${priPill(r.pri)}${pill(r.st)}</div>
+  <div class="tabs" role="tablist">${tabs.map(([k,l])=>`<button role="tab" aria-selected="${k===tab}" class="${k===tab?'on':''}" data-citab="${r.n}|${k}">${l}</button>`).join('')}</div>${body}`}
 /* ---------- Forms ---------- */
 const NEXT=(arr,pre)=>{const n=Math.max(0,...arr.map(x=>parseInt(String(x.n||x.id).split('-').pop())||0))+1;return `${pre}-${String(n).padStart(3,'0')}`};
 function form(kind,pre={}){const p=cur();const team=p.team.map(P);const opt=sel=>team.map(u=>`<option value="${u.id}" ${u.id===sel?'selected':''}>${esc(u.name)} — ${esc(u.role)}${u.ext?' (external)':''}</option>`).join('');
   const L=pendingLink;
-  const linkBox=L?`<div class="linkbox"><b>Linked location:</b> ${L.kind==='model'?`3D model · ${esc(L.name||L.type)} <span class="num">(${esc(L.guid)})</span>, camera view saved`:`Sheet ${esc(L.sheet)} at ${L.x}, ${L.y}`}</div>`:'';
+  const linkBox=L?(()=>{const p2=cur();if(L.kind==='model'){const fake={link:{mkey:L.mkey,point:L.point}},sh=sheetOf(p2,fake),lv=levelOfIssue(p2,fake);return `<div class="linkbox"><b>Location:</b> 3D model · ${esc(L.name||L.type)} <span class="num">(${esc(L.guid)})</span>${lv?` · ${esc(lv.level)}`:''}${sh?`<br>Also placed on sheet <b>${esc(sh.sheet)}</b>.`:''}</div>`}
+    const pl=p2.plans&&p2.plans[L.sheet];return `<div class="linkbox"><b>Location:</b> ${L.cloud?'Callout':'Pin'} on sheet ${esc(L.sheet)}${calOf(pl)?`<br>This sheet is aligned to ${esc(pl.level)}, so the issue also appears in the 3D model.`:''}</div>`})():'';
   const F={rfi:['New RFI',`<label for="ft">Subject<input id="ft" required></label><div class="row"><label for="fto">Ball in court<select id="fto">${opt()}</select></label><label for="fdue">Due date<input id="fdue" type="date" value="2026-10-16" required></label></div><div class="row"><label for="floc">Location<input id="floc" placeholder="e.g. Level 9"></label><label for="fdwg">Drawing<select id="fdwg">${p.dwgs.map(x=>`<option>${x[0]}</option>`).join('')}</select></label></div><label for="fimp">Impact<select id="fimp"><option>None</option><option>Cost</option><option>Schedule</option><option>Cost + Schedule</option></select></label><label for="fq">Question<textarea id="fq" rows="4"></textarea></label>`],
-    ci:['New coordination issue',`${linkBox}<label for="ft">Issue<input id="ft" required value="${esc(pre.t||'')}"></label><div class="row"><label for="fto">Assign to<select id="fto">${opt(pre.to)}</select></label><label for="ftr">Trade<select id="ftr">${['Mechanical','Electrical','Plumbing','Structural','Architectural'].map(t=>`<option ${t===pre.trade?'selected':''}>${t}</option>`).join('')}</select></label></div><label for="floc">Location<input id="floc" value="${esc(pre.loc||'')}" placeholder="e.g. Level 9 corridor"></label><label for="fdesc">Description<textarea id="fdesc" rows="3"></textarea></label>`],
+    ci:[pre.edit?'Edit '+pre.edit:(L&&L.cloud?'New callout':'New coordination issue'),`${pre.edit?'':linkBox}<label for="ft">Title<input id="ft" required value="${esc(pre.t||'')}"></label><label for="fdesc">Description<textarea id="fdesc" rows="3">${esc(pre.desc||'')}</textarea></label><label for="floc">Location<input id="floc" value="${esc(pre.loc||'')}" placeholder="e.g. Level 1 · Kitchen"></label><div class="row"><label for="fto">Assignee<select id="fto">${opt(pre.to)}</select></label><label for="fpri">Priority<select id="fpri">${PRI.map(x=>`<option ${x===(pre.pri||'Medium')?'selected':''}>${x}</option>`).join('')}</select></label></div><label for="ftr">Trade<select id="ftr">${['Mechanical','Electrical','Plumbing','Structural','Architectural'].map(t=>`<option ${t===pre.trade?'selected':''}>${t}</option>`).join('')}</select></label>${(L&&L.cloud)||pre.cloud?`<label for="fcall">Callout text<input id="fcall" value="${esc(pre.text||'')}" placeholder="Short note shown in the callout box"></label>`:''}<input type="hidden" id="fedit" value="${esc(pre.edit||'')}">`],
     review:['Start a drawing review',`<label for="ft">Package name<input id="ft" required placeholder="e.g. IFC set 4 – Mechanical"></label><label for="fsh">Sheets<select id="fsh" multiple size="${Math.min(6,p.dwgs.length)}">${p.dwgs.map(x=>`<option value="${x[0]}">${x[0]} – ${esc(x[1])}</option>`).join('')}</select></label><label for="frv">Reviewers<select id="frv" multiple size="${Math.min(6,team.length)}">${team.map(u=>`<option value="${u.id}">${esc(u.name)} — ${esc(u.role)}</option>`).join('')}</select></label><div class="row"><label for="fdue">Due date<input id="fdue" type="date" value="2026-10-20" required></label><label for="fbb">Bluebeam session ID (optional)<input id="fbb" placeholder="e.g. 482-115-990"></label></div>`],
     si:['Issue site instruction',`<label for="ft">Instruction<input id="ft" required></label><label for="fto">Issue to<select id="fto">${opt()}</select></label>`],
     co:['New change order',`<label for="ft">Description<input id="ft" required value="${esc(pre.t||'')}"></label><div class="row"><label for="famt">Amount (CAD)<input id="famt" type="number" required value="0"></label><label for="fsrc">Source<input id="fsrc" value="${esc(pre.src||'')}" placeholder="e.g. RFI-042"></label></div>`],
@@ -617,19 +804,21 @@ function form(kind,pre={}){const p=cur();const team=p.team.map(P);const opt=sel=
       <label for="frole">Role on this project<input id="frole" list="rolelist2" required placeholder="e.g. Superintendent"></label><datalist id="rolelist2">${ROLES.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>`],
     user:['Add user',`<div class="row"><label for="ft">Full name<input id="ft" required></label><label for="fco">Company<input id="fco" required></label></div><div class="row"><label for="fe">Email<input id="fe" type="email" required></label><label for="fph">Phone<input id="fph" type="tel"></label></div><div class="row"><label for="frole">Role<input id="frole" list="rolelist3"></label><label for="fext">Type<select id="fext"><option value="0">Townline staff</option><option value="1">External partner</option></select></label></div><datalist id="rolelist3">${ROLES.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>`],
     role:['Change project role',`<p style="margin:0">${esc(P(pre.id)?.name||'')}</p><input type="hidden" id="fid" value="${esc(pre.id||'')}"><label for="frole">Role on this project<input id="frole" list="rolelist4" required value="${esc(roleOf(p,pre.id))}"></label><datalist id="rolelist4">${ROLES.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>`],
+    align:['Align sheet to model',`<p style="margin:0">Pick two points on sheet <b>${esc(pre.sheet)}</b>, then the same two points in the 3D model. The sheet becomes the plan for this level and its minimap.</p><input type="hidden" id="fsheet" value="${esc(pre.sheet)}"><div class="row"><label for="flevel">Level name<input id="flevel" required value="${esc(pre.level||'')}" placeholder="e.g. Level 3"></label><label for="felev">Floor elevation (m)<input id="felev" type="number" step="0.01" required value="${pre.elev??0}"></label></div>`],
     invite:['Invite person',`<label for="ft">Name<input id="ft" required></label><label for="fco">Company<input id="fco" required></label><label for="fe">Email<input id="fe" type="email" placeholder="name@company.com"></label><label for="fext">Access<select id="fext"><option value="0">Townline staff (full project)</option><option value="1">External (assigned items only)</option></select></label>`],
     upload:['Upload sheets',`<label for="ff">PDF drawing set<input id="ff" type="file" accept=".pdf"></label><p class="muted">In production, each page is split into a sheet, numbered from its title block, and pre-rendered for fast viewing on site.</p>`]}[kind];
   openDrawer(`${CLOSE('Cancel')}<h2>${F[0]}</h2><form class="f" data-create="${kind}">${F[1]}<button class="btn pri" type="submit">Create</button></form>`);
 }
 function create(kind){const p=cur(),v=id=>document.getElementById(id)?.value||'';const multi=id=>[...(document.getElementById(id)?.selectedOptions||[])].map(o=>o.value);
   if(kind==='rfi'){const n=NEXT(p.rfis,'RFI');p.rfis.unshift({n,t:v('ft'),to:v('fto'),by:state.as,due:v('fdue'),st:'Open',imp:v('fimp'),loc:v('floc')||'—',dwg:v('fdwg'),x:500,y:350});toast(`${n} sent to ${P(v('fto')).name}`);state.tool='rfis'}
-  if(kind==='ci'){const n=NEXT(p.ci,'CI');const L=pendingLink;let link=null;
-    if(L?.kind==='model')link={kind:'model',guid:L.guid,point:L.point,view:L.view};
-    if(L?.kind==='sheet')link={kind:'sheet',sheet:L.sheet,x:L.x,y:L.y};
-    p.ci.unshift({n,t:v('ft'),trade:v('ftr'),to:v('fto'),by:state.as,st:'Open',loc:v('floc')||'—',src:L?.kind==='model'?'Model review':L?.kind==='sheet'?'Sheet markup':'Manual',link});
-    pendingLink=null;toast(`${n} assigned to ${P(v('fto')).name}`);closeDrawer();
-    if(link?.kind==='model'){state.focus=null;view();return}
-    if(link?.kind==='sheet'){view();return}
+  if(kind==='ci'){const ed=v('fedit');
+    if(ed){const c=p.ci.find(x=>x.n===ed);Object.assign(c,{t:v('ft'),desc:v('fdesc'),loc:v('floc'),to:v('fto'),pri:v('fpri'),trade:v('ftr')});if(c.link&&c.link.cloud&&document.getElementById('fcall'))c.link.text=v('fcall');saveData();toast(ed+' updated');closeDrawer();view();detail('ci',ed);return}
+    const n=NEXT(p.ci,'CI');const L=pendingLink;let link=null;
+    if(L&&L.kind==='model')link={kind:'model',mkey:L.mkey,guid:L.guid,point:L.point,view:L.view};
+    if(L&&L.kind==='sheet')link={kind:'sheet',sheet:L.sheet,x:L.x,y:L.y,cloud:L.cloud,text:L.cloud?(v('fcall')||v('ft')):undefined};
+    p.ci.unshift({n,t:v('ft'),desc:v('fdesc'),trade:v('ftr'),to:v('fto'),by:state.as,st:'Open',pri:v('fpri'),loc:v('floc')||'—',src:L&&L.kind==='model'?'Model review':L&&L.cloud?'Sheet callout':L?'Sheet pin':'Manual',link});
+    pendingLink=null;saveData();toast(`${n} assigned to ${P(v('fto')).name}`);closeDrawer();
+    if(link){state.mk=state.tool==='dwgs'?state.mk:'pan';view();return}
     state.tool='ci'}
   if(kind==='review'){const n=NEXT(p.reviews,'DR');const sh=multi('fsh'),rv=multi('frv');if(!sh.length||!rv.length){toast('Pick at least one sheet and one reviewer');return}
     p.reviews.unshift({n,t:v('ft'),sheets:sh,due:v('fdue'),st:'In review',bb:v('fbb'),rv:rv.map(id=>({id,st:'Reviewing'})),cm:[]});toast(`${n} sent to ${rv.length} reviewer${rv.length>1?'s':''}`);state.tool='reviews'}
@@ -642,6 +831,7 @@ function create(kind){const p=cur(),v=id=>document.getElementById(id)?.value||''
     p.team.push(id);p.roles=p.roles||{};p.roles[id]=v('frole');saveData();toast(`${P(id).name} added as ${v('frole')}`)}
   if(kind==='user'){const id='u'+Date.now();PEOPLE.push({id,name:v('ft'),co:v('fco'),role:v('frole')||(v('fext')==='1'?'External partner':'Townline staff'),email:v('fe'),phone:v('fph'),ext:v('fext')==='1'});saveData();selects();toast(`${v('ft')} added`);state.tool='users'}
   if(kind==='role'){p.roles=p.roles||{};p.roles[v('fid')]=v('frole');saveData();toast('Role updated');state.tool='team'}
+  if(kind==='align'){state.align={sheet:v('fsheet'),level:v('flevel'),elev:+v('felev')||0,s:[],m:[]};state.tool='dwgs';state.sheet=v('fsheet');state.mk='pan';state.vb=null;closeDrawer();view();toast('Click point A on the sheet');return}
   if(kind==='invite'){const id='u'+Date.now();PEOPLE.push({id,name:v('ft'),co:v('fco'),role:v('fext')==='1'?'External partner':'Townline staff',ext:v('fext')==='1'});p.team.push(id);selects();toast(`${v('ft')} invited`);state.tool='team'}
   if(kind==='upload'){toast('Sheet upload is simulated in the prototype')}
   closeDrawer();view();
@@ -695,25 +885,36 @@ let tt;function toast(m){const t=document.getElementById('toast');t.textContent=
 /* ---------- Events ---------- */
 document.addEventListener('click',async e=>{
   if(e.target.id==='drawer'){closeDrawer();return}
-  const t=e.target.closest('[data-go-sheet],[data-go-model],[data-go-model-link],[data-go-sheet-link],[data-tool],[data-open],[data-new],[data-close],[data-sheet],[data-zoom],[data-place],[data-v],[data-resolve],[data-ack],[data-approve],[data-toco],[data-toast],[data-rv],[data-cm2ci],[data-folder],[data-upload-file],[data-upload-model],[data-open-ifc],[data-remove-file],[data-member-role],[data-member-remove]');
+  const t=e.target.closest('[data-go-sheet],[data-go-model],[data-go-ci-model],[data-go-ci-sheet],[data-mk],[data-mk-go],[data-level],[data-level-3d],[data-align-start],[data-align-cancel],[data-xflock],[data-citab],[data-edit-ci],[data-rep-all],[data-print],[data-tool],[data-open],[data-new],[data-close],[data-sheet],[data-zoom],[data-place],[data-v],[data-resolve],[data-ack],[data-approve],[data-toco],[data-toast],[data-rv],[data-cm2ci],[data-folder],[data-upload-file],[data-upload-model],[data-open-ifc],[data-remove-file],[data-member-role],[data-member-remove]');
   if(!t)return;const ds=t.dataset;
-  if(ds.goModelLink||ds.goSheetLink){e.stopPropagation();const n=t.closest('[data-ci]').dataset.ci;const c=cur().ci.find(x=>x.n===n);if(c.link.kind==='model')goModel(n);else goSheet(c.link.sheet,c.link.x,c.link.y,'ci:'+n);return}
+  if(ds.goCiModel){e.stopPropagation();goModel(ds.goCiModel);return}
+  if(ds.goCiSheet){e.stopPropagation();const c=cur().ci.find(x=>x.n===ds.goCiSheet),sh=c&&sheetOf(cur(),c);if(sh)goSheet(sh.sheet,sh.cloud?sh.cloud.x+sh.cloud.w/2:sh.x,sh.cloud?sh.cloud.y+sh.cloud.h/2:sh.y,'ci:'+c.n);return}
+  if(ds.mk){state.mk=ds.mk;view();if(ds.mk==='cloud')toast('Drag a box around the area to draw a callout');if(ds.mk==='pin')toast('Click the spot on the sheet to drop an issue pin');return}
+  if(ds.mkGo){state.tool='dwgs';state.mk=ds.mkGo;state.q='';view();toast('Pick a sheet, then drag a box to draw a callout');return}
+  if(ds.level){setLevel(ds.level);return}
+  if(ds.level3d){state.tool='models';state.level=ds.level3d;state.levelJump=ds.level3d;view();return}
+  if(ds.alignStart){const pl=cur().plans&&cur().plans[ds.alignStart];form('align',{sheet:ds.alignStart,level:pl?pl.level:'',elev:pl?pl.elev:0});return}
+  if(ds.alignCancel){state.align=null;toast('Alignment cancelled');view();return}
+  if(ds.xflock){const t2=xfOf(cur(),ds.xflock);t2.locked=!t2.locked;saveData();toast(t2.locked?'Model position locked':'Model unlocked. Adjust X, Y, Z or rotation.');view();return}
+  if(ds.citab){const [n,tb]=ds.citab.split('|');state.citab=tb;detail('ci',n);return}
+  if(ds.editCi){const c=cur().ci.find(x=>x.n===ds.editCi);pendingLink=null;form('ci',{edit:c.n,t:c.t,desc:c.desc,loc:c.loc,to:c.to,pri:c.pri,trade:c.trade,cloud:!!(c.link&&c.link.cloud),text:c.link&&c.link.text});return}
+  if(ds.repAll){state.repAll=!state.repAll;view();return}
+  if(ds.print){try{window.print()}catch(_){}return}
   if(ds.goSheet){e.stopPropagation();const [s,x,y,id]=ds.goSheet.split(':');goSheet(s,+x,+y,id);return}
   if(ds.goModel){goModel(ds.goModel);return}
-  if(ds.tool){state.tool=ds.tool;state.q='';state.f='all';state.focus=null;state.placing=false;view();return}
-  if(ds.open){const [k,id]=ds.open.split(':');detail(k,id);return}
+  if(ds.tool){state.tool=ds.tool;state.q='';state.f='all';state.focus=null;view();return}
+  if(ds.open){const [k,id]=ds.open.split(':');if(k==='ci')state.citab='details';detail(k,id);return}
   if(ds.new){pendingLink=null;form(ds.new);return}
   if('close' in ds){closeDrawer();pendingLink=null;return}
   if(ds.sheet){state.sheet=ds.sheet;state.vb=null;state.focus=null;view();return}
   if(ds.zoom){if(ds.zoom==='fit'){state.vb=null;view()}else zoomSheet(ds.zoom==='in'?0.75:1/0.75);return}
-  if(ds.place){state.placing=!state.placing;view();if(state.placing)toast('Click the spot on the sheet where the issue is');return}
   if(ds.v){const V=window.TLViewer;if(!V)return;
     if(ds.v==='fit')V.fit();
     if(ds.v==='isolate'){state.isolate=!state.isolate;V.isolate(state.isolate);refreshModelUI()}
-    if(ds.v==='issue'&&state.sel){const s=state.sel;pendingLink={kind:'model',guid:s.guid,point:s.point,view:V.getViewpoint(),name:s.name,type:s.type};
-      form('ci',{t:`${s.type.replace('Ifc','')} – ${s.name||''}: `,trade:{'Building-Hvac':'Mechanical','Building-Structural':'Structural','Building-Architecture':'Architectural'}[s.model]||'Architectural'})}
+    if(ds.v==='issue'&&state.sel){const sl=state.sel;pendingLink={kind:'model',mkey:sl.model,guid:sl.guid,point:sl.local||sl.point,view:V.getViewpoint(),name:sl.name,type:sl.type};const lv=levelFor(cur(),sl.point?sl.point[1]:0);
+      form('ci',{t:`${sl.type.replace('Ifc','')} – ${sl.name||''}: `,loc:lv?lv.level:'',trade:{'Building-Hvac':'Mechanical','Building-Structural':'Structural','Building-Architecture':'Architectural'}[sl.model]||'Architectural'})}
     return}
-  if(ds.resolve){cur().ci.find(x=>x.n===ds.resolve).st='Resolved';closeDrawer();toast(ds.resolve+' resolved');view();return}
+  if(ds.resolve){cur().ci.find(x=>x.n===ds.resolve).st='Resolved';saveData();closeDrawer();toast(ds.resolve+' resolved');view();return}
   if(ds.ack){cur().si.find(x=>x.n===ds.ack).st='Acknowledged';closeDrawer();toast(ds.ack+' acknowledged');view();return}
   if(ds.approve){cur().cos.find(x=>x.n===ds.approve).st='Approved';closeDrawer();toast(ds.approve+' approved and queued for Yardi');view();return}
   if(ds.toco){const r=cur().rfis.find(x=>x.n===ds.toco);form('co',{t:r.t,src:r.n});return}
@@ -736,17 +937,20 @@ document.addEventListener('submit',e=>{e.preventDefault();const f=e.target;
 document.addEventListener('input',e=>{if(e.target.id==='q'){state.q=e.target.value;const pos=e.target.selectionStart;view();const q=document.getElementById('q');if(q){q.focus();q.setSelectionRange(pos,pos)}}});
 document.addEventListener('change',e=>{if(e.target.id==='f'){state.f=e.target.value;view()}
   if(e.target.dataset.layer){const p=cur();const m=p.modelFiles.find(x=>(x.key||x.loadedName)===e.target.dataset.layer);if(m)m.on=e.target.checked;window.TLViewer?.setVisible(e.target.dataset.layer,e.target.checked)}
+  if(e.target.dataset.xf){const [k,a]=e.target.dataset.xf.split('|'),p=cur(),t2=xfOf(p,k);if(t2.locked)return;t2[a]=+e.target.value||0;window.TLViewer&&window.TLViewer.setTransform(k,t2);refreshMarkers();renderMinimap();saveData()}
   if(e.target.id==='fuser'){const nf=document.getElementById('newfields');if(nf)nf.hidden=e.target.value!=='__new'}
   if(e.target.id==='fileIn'){handleFiles([...e.target.files])}
-  if(e.target.id==='proj'){state.proj=e.target.value;state.q='';state.f='all';state.sheet=null;state.vb=null;state.sel=null;state.focus=null;mountViewer.fitted=false;window.TLViewer?.select(null);view();toast('Switched to '+cur().name)}
+  if(e.target.id==='proj'){state.proj=e.target.value;state.q='';state.f='all';state.sheet=null;state.vb=null;state.sel=null;state.focus=null;state.level='all';state.align=null;mountViewer.fitted=false;window.TLViewer?.select(null);view();toast('Switched to '+cur().name)}
   if(e.target.id==='as'){state.as=e.target.value;view()}});
+document.addEventListener('click',e=>{const svg=e.target.closest&&e.target.closest('#mmsvg');if(!svg)return;if(e.target.closest('[data-open]'))return;const el=document.getElementById('minimap'),p=cur(),pl=p.plans[el.dataset.level],c=calOf(pl),V=window.TLViewer;if(!c||!V)return;
+  const [X,Z]=s2w(c,svgPt(svg,e));V.lookAtPlan(X,pl.elev+1.0,Z,6);toast(`Jumped to ${pl.level}`)});
 document.addEventListener('dragover',e=>{const dz=e.target.closest?.('#drop');if(dz){e.preventDefault();dz.classList.add('over')}});
 document.addEventListener('dragleave',e=>{const dz=e.target.closest?.('#drop');if(dz)dz.classList.remove('over')});
 document.addEventListener('drop',e=>{const dz=e.target.closest?.('#drop');if(dz){e.preventDefault();uploadMode='files';handleFiles([...e.dataTransfer.files])}});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();if(state.placing){state.placing=false;view()}}});
-function saveData(){try{localStorage.setItem('sb-data',JSON.stringify({people:PEOPLE,proj:Object.fromEntries(Object.entries(PROJECTS).map(([k,p])=>[k,{desc:p.desc,phase:p.phase,team:p.team,roles:p.roles||{}}]))}))}catch(e){}}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!document.getElementById('drawer').hidden){closeDrawer();return}if(e.key==='Escape'&&(state.mk!=='pan'||state.align)){state.mk='pan';state.align=null;view()}});
+function saveData(){try{localStorage.setItem('sb-data',JSON.stringify({people:PEOPLE,proj:Object.fromEntries(Object.entries(PROJECTS).map(([k,p])=>[k,{desc:p.desc,phase:p.phase,team:p.team,roles:p.roles||{},ci:p.ci,plans:p.plans,xf:p.xf}]))}))}catch(e){}}
 function loadData(){try{const d=JSON.parse(localStorage.getItem('sb-data')||'null');if(!d)return;
   (d.people||[]).forEach(sp=>{const u=PEOPLE.find(x=>x.id===sp.id);if(u)Object.assign(u,sp);else PEOPLE.push(sp)});
   Object.entries(d.proj||{}).forEach(([k,sp])=>{const p=PROJECTS[k];if(p)Object.assign(p,sp)})}catch(e){}}
-loadData();selects();view();restoreUploads();
+loadData();selects();view();restoreUploads();loadSample().then(()=>{if(['dwgs','models','ci','cireport'].includes(state.tool)||!document.getElementById('drawer').hidden)view()}).catch(()=>{});
 </script>
