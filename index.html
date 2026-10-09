@@ -1,5 +1,4 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"></head><body>
+<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Townline Sitebook Prototype</title>
 <style>
 /* Townline Graphic Standards (2018): Black R35 G31 B32, Blue R120 G141 B164 (PMS 2158), Dark Blue R69 G90 B121 (PMS 2161),
@@ -7,21 +6,24 @@
 /* Layout: app shell — black brand rail, top bar with project switcher, working canvas with list + slide-over detail */
 :root{
   --bg:#f3f4f6; --panel:#ffffff; --ink:#231f20; --muted:#6d6e71; --line:#d9dde3; --rail:#231f20; --rail-ink:#c9ccd1;
-  --accent:#455a79; --accent-ink:#ffffff; --accent-soft:#e4e9f0; --brand:#788da4; --viewer:#e9ecf0; --sheet:#ffffff; --sheet-ink:#3a3c40; --sheet-faint:#c3c8cf;
+  --accent:#455a79; --accent-ink:#ffffff; --accent-soft:#e4e9f0; --brand:#788da4; --head:#eaf0f7; --head-ink:#455a79; --hi:#455a79; --viewer:#e9ecf0; --sheet:#ffffff; --sheet-ink:#3a3c40; --sheet-faint:#c3c8cf;
   --good:#3d7a57; --warn:#a1742a; --crit:#a84444; --info:#455a79;
   --good-soft:#e2eee7; --warn-soft:#f3ebdc; --crit-soft:#f4e1e1; --info-soft:#e4e9f0;
+  --top-a:#455a79; --top-b:#788da4; --top-ink:#ffffff;
   --display:"Arial Narrow",Arial,sans-serif; --body:Arial,Helvetica,sans-serif; --mono:Arial,Helvetica,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#1b191a; --panel:#252223; --ink:#ececed; --muted:#a7a9ac; --line:#3a3739; --rail:#121011; --rail-ink:#a7a9ac;
-  --accent:#788da4; --accent-ink:#121011; --accent-soft:#2c333d; --brand:#788da4; --viewer:#1f1d1e; --sheet:#2a2829; --sheet-ink:#d3d5d8; --sheet-faint:#4a4749;
-  --good:#6fb48b; --warn:#d2a75a; --crit:#d97a7a; --info:#9fb1c5;
-  --good-soft:#1f3128; --warn-soft:#352c1c; --crit-soft:#3a2424; --info-soft:#2c333d; color-scheme:dark}}
+  --bg:#222932; --panel:#2b333e; --ink:#ffffff; --muted:#bcc8d6; --line:#3e4858; --rail:#16191e; --rail-ink:#d3dce6;
+  --accent:#a8cbee; --accent-ink:#0e1a28; --accent-soft:#2c3d52; --brand:#a8c0da; --head:#33465f; --head-ink:#cfe2f5; --hi:#a8cbee;
+  --viewer:#dbe5ee; --sheet:#ffffff; --sheet-ink:#2b2d31; --sheet-faint:#b9c2cc;
+  --good:#7fcb9c; --warn:#e3b866; --crit:#f08c8c; --info:#a8cbee;
+  --good-soft:#203a2c; --warn-soft:#3d321c; --crit-soft:#432828; --info-soft:#2c3d52; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#1b191a; --panel:#252223; --ink:#ececed; --muted:#a7a9ac; --line:#3a3739; --rail:#121011; --rail-ink:#a7a9ac;
-  --accent:#788da4; --accent-ink:#121011; --accent-soft:#2c333d; --brand:#788da4; --viewer:#1f1d1e; --sheet:#2a2829; --sheet-ink:#d3d5d8; --sheet-faint:#4a4749;
-  --good:#6fb48b; --warn:#d2a75a; --crit:#d97a7a; --info:#9fb1c5;
-  --good-soft:#1f3128; --warn-soft:#352c1c; --crit-soft:#3a2424; --info-soft:#2c333d; color-scheme:dark}
+  --bg:#222932; --panel:#2b333e; --ink:#ffffff; --muted:#bcc8d6; --line:#3e4858; --rail:#16191e; --rail-ink:#d3dce6;
+  --accent:#a8cbee; --accent-ink:#0e1a28; --accent-soft:#2c3d52; --brand:#a8c0da; --head:#33465f; --head-ink:#cfe2f5; --hi:#a8cbee;
+  --viewer:#dbe5ee; --sheet:#ffffff; --sheet-ink:#2b2d31; --sheet-faint:#b9c2cc;
+  --good:#7fcb9c; --warn:#e3b866; --crit:#f08c8c; --info:#a8cbee;
+  --good-soft:#203a2c; --warn-soft:#3d321c; --crit-soft:#432828; --info-soft:#2c3d52; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%}
@@ -36,27 +38,29 @@ button,input,select,textarea{font:inherit;color:inherit}
 .nav{all:unset;cursor:pointer;display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-radius:6px;font-size:14px}
 .nav:hover{background:rgba(255,255,255,.06)}
 .nav:focus-visible{outline:2px solid var(--brand)}
-.nav.on{background:rgba(255,255,255,.08);color:#fff;position:relative}
-.nav.on::before{content:"";position:absolute;left:-12px;top:50%;transform:translateY(-50%);border-left:7px solid var(--brand);border-top:7px solid transparent;border-bottom:7px solid transparent}
+.nav.on{background:rgba(168,203,238,.16);color:#fff;position:relative}
+.nav.on::before{content:"";position:absolute;left:-12px;top:50%;transform:translateY(-50%);border-left:7px solid #a8cbee;border-top:7px solid transparent;border-bottom:7px solid transparent}
 .nav .ct{font-size:11px;opacity:.7;font-variant-numeric:tabular-nums}
 .main{min-width:0;display:flex;flex-direction:column}
-.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:12px 24px;background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:12px 24px;background:linear-gradient(90deg,var(--top-a),var(--top-b));color:var(--top-ink);border-bottom:0;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
 .switch{display:flex;align-items:center;gap:10px;min-width:0}
-.switch label{font-family:var(--display);font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
-.switch select{border:1px solid var(--line);background:var(--bg);border-radius:6px;padding:7px 10px;font-weight:600;max-width:100%}
-.who{display:flex;flex-wrap:wrap;gap:10px;align-items:center;color:var(--muted);font-size:13px}
-.demo{font-size:11px;letter-spacing:.06em;background:var(--warn-soft);color:var(--warn);padding:3px 8px;border-radius:4px}
+.switch label{font-family:var(--display);font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.8)}
+.top select{border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.14);color:#fff}
+.top select option{color:#231f20;background:#fff}
+.switch select{border-radius:6px;padding:7px 10px;font-weight:600;max-width:100%}
+.who{display:flex;flex-wrap:wrap;gap:10px;align-items:center;color:rgba(255,255,255,.85);font-size:13px}
+.demo{font-size:11px;letter-spacing:.06em;background:#ffffff;color:#455a79;font-weight:600;padding:3px 8px;border-radius:4px}
 .canvas{padding:24px;display:flex;flex-direction:column;gap:20px;min-width:0}
 h1{font-family:var(--display);font-size:32px;font-weight:600;margin:0;line-height:1.05;text-wrap:balance;text-transform:uppercase;letter-spacing:.03em}
 h2{font-family:var(--display);font-size:17px;font-weight:600;margin:0;text-transform:uppercase;letter-spacing:.06em}
-h3{font-family:var(--display);font-size:14px;font-weight:600;margin:0;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+h3{font-family:var(--display);font-size:14px;font-weight:600;margin:0;text-transform:uppercase;letter-spacing:.08em;color:var(--hi)}
 b,strong{font-weight:600}
 .sub{color:var(--muted);margin:4px 0 0}
 .head{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between}
 .btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .btn{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:8px 14px;cursor:pointer;font-weight:600;font-size:13px}
 .btn:hover{border-color:var(--muted)}
-.btn.sm{padding:5px 10px;font-size:12px}
+.btn.sm{padding:5px 10px;font-size:12px;white-space:nowrap}
 .btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.on{background:var(--accent-soft);border-color:var(--accent)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
@@ -64,15 +68,16 @@ b,strong{font-weight:600}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
 .tile{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px;cursor:pointer;text-align:left}
 .tile .k{font-family:var(--display);font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
-.tile .v{font-family:var(--display);font-size:34px;font-weight:600;font-variant-numeric:tabular-nums}
+.tile .v{font-family:var(--display);font-size:34px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--hi)}
+.tile:hover{border-color:var(--hi)}
 .tile .n{font-size:12px;color:var(--muted)}
 .tile .n b{color:var(--crit)}
 .grid2{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;min-width:0}
-.card h2{margin-bottom:10px}
+.card h2{margin-bottom:10px;color:var(--hi)}
 .tbl{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;font-family:var(--display);font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{text-align:left;font-family:var(--display);font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--head-ink);background:var(--head);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
 td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
 tr:last-child td{border-bottom:0}
 tbody tr[data-open]{cursor:pointer}
@@ -129,7 +134,7 @@ form.f{display:flex;flex-direction:column;gap:12px}
 .sheetlist button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .stage{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;min-width:0}
 .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--line)}
-.sheetwrap{position:relative;aspect-ratio:10/7;max-width:100%;background:var(--bg);cursor:grab;touch-action:none}
+.sheetwrap{position:relative;aspect-ratio:10/7;max-width:100%;background:var(--sheet);cursor:grab;touch-action:none}
 .sheetwrap.placing{cursor:crosshair}
 .sheetwrap svg{width:100%;height:100%;display:block}
 .viewer{position:relative;height:clamp(360px,62vh,680px);background:var(--viewer)}
@@ -183,13 +188,13 @@ form.f{display:flex;flex-direction:column;gap:12px}
 <script>
 const TODAY = new Date('2026-10-09');
 const PEOPLE = [
-  {id:'tm',name:'Thomas M.',co:'Townline',role:'Project Manager',ext:false},
-  {id:'sk',name:'Sara K.',co:'Townline',role:'Superintendent',ext:false},
-  {id:'jl',name:'James L.',co:'Townline',role:'Project Coordinator',ext:false},
-  {id:'ar',name:'Anita R.',co:'Lorem Architecture Inc. (sample)',role:'Architect',ext:true},
-  {id:'dc',name:'Dev C.',co:'Northline Structural (sample)',role:'Structural Engineer',ext:true},
-  {id:'mp',name:'Maria P.',co:'Coastal Mechanical (sample)',role:'Mechanical Trade',ext:true},
-  {id:'ew',name:'Eric W.',co:'Bright Electric (sample)',role:'Electrical Trade',ext:true},
+  {id:'tm',name:'Thomas Morrissey',co:'Townline',role:'Senior VDC Manager',email:'thomasmorrissey@townline.com',phone:'778-222-605',ext:false},
+  {id:'sk',name:'Sara K.',co:'Townline (sample)',role:'Superintendent',email:'sara.k@example.com',phone:'604-555-0102',ext:false,sample:true},
+  {id:'jl',name:'James L.',co:'Townline (sample)',role:'Project Coordinator',email:'james.l@example.com',phone:'604-555-0103',ext:false,sample:true},
+  {id:'ar',name:'Anita R.',co:'Lorem Architecture Inc. (sample)',role:'Architect',email:'anita.r@example.com',phone:'604-555-0104',ext:true,sample:true},
+  {id:'dc',name:'Dev C.',co:'Northline Structural (sample)',role:'Structural Engineer',email:'dev.c@example.com',phone:'604-555-0105',ext:true,sample:true},
+  {id:'mp',name:'Maria P.',co:'Coastal Mechanical (sample)',role:'Mechanical Trade',email:'maria.p@example.com',phone:'604-555-0106',ext:true,sample:true},
+  {id:'ew',name:'Eric W.',co:'Bright Electric (sample)',role:'Electrical Trade',email:'eric.w@example.com',phone:'604-555-0107',ext:true,sample:true},
 ];
 const P = id => PEOPLE.find(p=>p.id===id);
 const d = s => new Date(s);
@@ -220,7 +225,8 @@ function mkFiles(prefix,extra=[]){return [
   ...extra]}
 
 const PROJECTS = {
-  'TL-2401': {name:'Harbourview Tower', city:'North Vancouver', type:'22-storey concrete residential, 186 units', team:['tm','sk','jl','ar','dc','mp','ew'], models:true,
+  'TL-2401': {name:'Harbourview Tower', city:'North Vancouver', type:'22-storey concrete residential, 186 units', phase:'Construction',
+    desc:'A 22-storey concrete residential tower with 186 strata homes over three levels of underground parking, a ground-floor amenity lounge and a rooftop terrace. Structure is cast-in-place concrete with a transfer level at Level 3. (Sample project description.)', team:['tm','sk','jl','ar','dc','mp','ew'], models:true,
     budget:[['01 General Requirements',2400000,2310000,2280000],['03 Concrete',11800000,11950000,9200000],['05 Metals',1650000,1580000,820000],['08 Openings',4200000,4380000,1200000],['09 Finishes',6900000,6100000,300000],['22 Plumbing',3800000,3720000,1650000],['23 HVAC',4600000,4710000,1900000],['26 Electrical',4100000,3990000,1700000]],
     rfis:[
       {n:'RFI-041',t:'Slab edge detail at L14 balcony – drip groove conflict',to:'ar',by:'sk',due:'2026-10-02',st:'Open',imp:'Schedule',loc:'Level 14',dwg:'A-301',x:300,y:240},
@@ -262,7 +268,8 @@ const PROJECTS = {
       {id:'AST-1204-01',name:'Range hood – Suite 1204',cat:'Appliance',loc:'Suite 1204',mfr:'Sample Mfr',model:'RH-30',warr:'2027-11-30',st:'Installed',docs:3,req:3},
       {id:'AST-0431',name:'Main switchgear MSB',cat:'Electrical',loc:'P1 Elec Room',mfr:'Sample Mfr',model:'SG-3000A',warr:'2028-11-30',st:'Installed',docs:2,req:4}]
   },
-  'TL-2307': {name:'Cedar Row Townhomes', city:'Langley', type:'48 wood-frame townhomes, 8 buildings', team:['tm','sk','ar','mp','ew'], models:true,
+  'TL-2307': {name:'Cedar Row Townhomes', city:'Langley', type:'48 wood-frame townhomes, 8 buildings', phase:'Construction',
+    desc:'48 three-storey wood-frame townhomes in eight buildings, each with a side-by-side garage, heat pump heating and cooling, and private yards. (Sample project description.)', team:['tm','sk','ar','mp','ew'], models:true,
     budget:[['01 General Requirements',900000,880000,640000],['06 Wood & Framing',5200000,5350000,4100000],['07 Roofing',1100000,1060000,700000],['09 Finishes',3100000,3000000,1200000],['26 Electrical',1400000,1380000,900000]],
     rfis:[
       {n:'RFI-112',t:'Building 5 roof truss layout vs. revised dormer',to:'ar',by:'sk',due:'2026-10-05',st:'Open',imp:'Schedule',loc:'Bldg 5',dwg:'A-205',x:480,y:260},
@@ -277,7 +284,8 @@ const PROJECTS = {
     files:mkFiles('CR').filter(f=>!/Bright|STR/.test(f.n)),
     assets:[{id:'AST-0101',name:'Heat pump – Unit 1',cat:'HVAC',loc:'Unit 1',mfr:'Sample Mfr',model:'HP-24',warr:'2031-06-30',st:'Planned',docs:1,req:4},{id:'AST-0102',name:'Electric water heater – Unit 1',cat:'Plumbing',loc:'Unit 1',mfr:'Sample Mfr',model:'WH-50',warr:'2032-06-30',st:'Planned',docs:1,req:3}]
   },
-  'TL-2502': {name:'Lonsdale Rental (Precon)', city:'North Vancouver', type:'14-storey purpose-built rental, preconstruction', team:['tm','jl','ar','dc'], models:false,
+  'TL-2502': {name:'Lonsdale Rental (Precon)', city:'North Vancouver', type:'14-storey purpose-built rental, preconstruction', phase:'Preconstruction',
+    desc:'A 14-storey purpose-built rental building currently in preconstruction, with the Development Permit set under coordination review. (Sample project description.)', team:['tm','jl','ar','dc'], models:false,
     budget:[['01 General Requirements',1800000,0,0],['03 Concrete',8600000,0,0],['09 Finishes',5200000,0,0]],
     rfis:[{n:'RFI-003',t:'Geotech report revision – shoring design basis',to:'dc',by:'tm',due:'2026-10-21',st:'Open',imp:'Schedule',loc:'Site',dwg:'S-001',x:420,y:300}],
     si:[],cos:[],ci:[],
@@ -301,8 +309,8 @@ function pill(st,od){if(od)return '<span class="pill p-over">Overdue</span>';
 function linkChip(l){if(!l)return '<span class="muted">—</span>';
   return l.kind==='model'?`<span class="chip" data-go-model-link="1"><i></i>3D model</span>`:`<span class="chip" data-go-sheet-link="1"><i></i>Sheet ${esc(l.sheet)}</span>`}
 
-const TOOLS=[['home','Overview','Project'],['rfis','RFIs','Project'],['si','Site instructions','Project'],['ci','Coordination issues','Coordination'],['reviews','Drawing reviews','Coordination'],['dwgs','Drawings','Documents'],['models','Models','Documents'],['files','Files','Documents'],['cos','Change orders','Financials'],['budget','Budget','Financials'],['assets','Asset register','Closeout'],['team','Team & access','Admin']];
-function counts(){const p=cur();return {rfis:visible(p.rfis).filter(r=>r.st==='Open').length,ci:visible(p.ci).filter(r=>r.st==='Open').length,reviews:visReviews(p).filter(r=>r.st!=='Complete').length,si:visible(p.si).filter(r=>r.st!=='Complete').length,cos:p.cos.filter(r=>r.st!=='Approved').length,assets:p.assets.length,team:p.team.length,dwgs:p.dwgs.length,models:p.modelFiles.length,files:p.files.length}}
+const TOOLS=[['home','Overview','Project'],['rfis','RFIs','Project'],['si','Site instructions','Project'],['ci','Coordination issues','Coordination'],['reviews','Drawing reviews','Coordination'],['dwgs','Drawings','Documents'],['models','Models','Documents'],['files','Files','Documents'],['cos','Change orders','Financials'],['budget','Budget','Financials'],['assets','Asset register','Closeout'],['team','Project team','Admin'],['users','Users','Admin'],['profile','My profile','Admin']];
+function counts(){const p=cur();return {rfis:visible(p.rfis).filter(r=>r.st==='Open').length,ci:visible(p.ci).filter(r=>r.st==='Open').length,reviews:visReviews(p).filter(r=>r.st!=='Complete').length,si:visible(p.si).filter(r=>r.st!=='Complete').length,cos:p.cos.filter(r=>r.st!=='Approved').length,assets:p.assets.length,team:p.team.length,users:PEOPLE.length,dwgs:p.dwgs.length,models:p.modelFiles.length,files:p.files.length}}
 function rail(){const c=counts();let g='',h='<div class="brand"><img src="data:image/png;base64,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" alt="Townline"><span>Sitebook</span></div>';
   TOOLS.filter(t=>canSee(t[0])).forEach(([id,label,grp])=>{if(grp!==g){h+=`<div class="navgroup">${grp}</div>`;g=grp}
     h+=`<button class="nav ${state.tool===id?'on':''}" data-tool="${id}"><span>${label}</span><span class="ct">${c[id]??''}</span></button>`});
@@ -315,13 +323,13 @@ function selects(){
 const me=()=>P(state.as);
 function visible(list){if(!me().ext) return list; return list.filter(r=>r.to===state.as||r.by===state.as)}
 function visReviews(p){if(!me().ext) return p.reviews; return p.reviews.filter(r=>r.rv.some(x=>x.id===state.as))}
-function canSee(tool){if(!me().ext) return true; return ['home','rfis','si','ci','reviews','dwgs','models','files'].includes(tool)}
+function canSee(tool){if(!me().ext) return true; return ['home','rfis','si','ci','reviews','dwgs','models','files','team','profile'].includes(tool)}
 
 function view(){
   rail(); save();
   const v=document.getElementById('view'), p=cur();
   if(!canSee(state.tool)){state.tool='home'}
-  const r={home,rfis,si,ci,reviews,dwgs,models,files,cos,budget,assets,team}[state.tool];
+  const r={home,rfis,si,ci,reviews,dwgs,models,files,cos,budget,assets,team,users,profile}[state.tool];
   v.innerHTML=r(p);
   if(state.tool==='dwgs') attachSheet();
   if(state.tool==='models') mountViewer();
@@ -336,6 +344,13 @@ function home(p){
   const mine=[...visible(p.rfis).filter(r=>r.st==='Open').map(r=>({...r,k:'rfis'})),...visible(p.ci).filter(r=>r.st==='Open').map(r=>({...r,k:'ci'})),...visible(p.si).filter(r=>r.st==='Issued').map(r=>({...r,k:'si'}))].filter(r=>r.to===state.as);
   const myRev=p.reviews.filter(r=>r.st!=='Complete'&&r.rv.some(x=>x.id===state.as&&x.st==='Reviewing'));
   return `${hdr(esc(p.name),`${state.proj} · ${esc(p.city)} · ${esc(p.type)}`)}
+  <div class="grid2">
+    <div class="card"><div class="head" style="align-items:center"><h2 style="margin:0">Project description</h2>${ext?'':'<button class="btn sm" data-new="desc">Edit</button>'}</div>
+      <p style="margin:10px 0 14px;max-width:68ch;white-space:pre-line">${esc(p.desc||'No description yet.')}</p>
+      <dl class="dl"><dt>Project number</dt><dd class="num">${state.proj}</dd><dt>Location</dt><dd>${esc(p.city)}</dd><dt>Building type</dt><dd>${esc(p.type)}</dd><dt>Phase</dt><dd>${esc(p.phase||'—')}</dd></dl></div>
+    <div class="card"><div class="head" style="align-items:center"><h2 style="margin:0">Project team</h2>${ext?'':'<button class="btn sm" data-new="member">Add member</button>'}</div>
+      <div class="list" style="margin-top:6px">${p.team.map(id=>{const u=P(id);if(!u)return '';return `<div class="li"><div class="t"><b>${esc(u.name)}</b>${u.ext?'<span class="ext">EXT</span>':''}<div class="muted">${esc(roleOf(p,id))} · ${esc(u.co)}</div></div><div style="text-align:right;font-size:13px">${contact(u)}</div></div>`}).join('')}</div></div>
+  </div>
   <div class="tiles">
     <button class="tile" data-tool="rfis"><div class="k">Open RFIs</div><div class="v">${open.length}</div><div class="n">${od.length?`<b>${od.length} overdue</b>`:'None overdue'}</div></button>
     <button class="tile" data-tool="ci"><div class="k">Coordination issues</div><div class="v">${visible(p.ci).filter(c=>c.st==='Open').length}</div><div class="n">${visible(p.ci).filter(c=>c.st==='Open'&&c.link?.kind==='model').length} linked to the 3D model</div></button>
@@ -483,7 +498,7 @@ function models(p){
       <div class="card"><h3>Model files</h3><div class="list" style="margin-top:6px">${p.modelFiles.map(m=>`<div class="li"><div class="t"><span class="num">${esc(m.file)}</span><div class="muted">${esc(m.disc)}</div></div>${pill(m.status)}</div>`).join('')}</div></div>
     </div>
   </div>${modelNote()}`}
-function modelNote(){return `<p class="note">Sample geometry: buildingSMART International "Simple Scene" house, split into architectural, structural and HVAC IFC files (CC BY 4.0). Navisworks .nwd and .nwc files are Autodesk's closed format and can't be opened directly in the browser; in production they would be converted through Autodesk Platform Services. IFC files you upload here open right away.</p>`}
+function modelNote(){return `<p class="note">Sample geometry: buildingSMART International "Simple Scene" house, split into architectural, structural and HVAC IFC files (CC BY 4.0). Navisworks .nwd and .nwc files are Autodesk's closed format and can't be opened directly in the browser; in production they would be converted through Autodesk Platform Services. IFC files you upload here open right away and stay after a refresh. In this prototype they're saved in your own browser only, so other people won't see them.</p>`}
 function selPanel(){const s=state.sel;if(!s)return `<h3>Selection</h3><p class="muted" style="margin:6px 0 0">Click an element in the model to see its properties.</p>`;
   return `<h3>Selection</h3><dl class="dl" style="margin-top:8px"><dt>Name</dt><dd>${esc(s.name||'(unnamed)')}</dd><dt>IFC class</dt><dd>${esc(s.type)}</dd><dt>Discipline</dt><dd>${esc(discOf(s.model))}</dd><dt>GlobalId</dt><dd class="num">${esc(s.guid)}</dd><dt>Picked point</dt><dd class="num">${s.point?s.point.map(v=>v.toFixed(2)).join(', '):'—'}</dd></dl>`}
 const discOf=k=>{const m=cur().modelFiles.find(x=>x.key===k||x.loadedName===k);return m?m.disc:k};
@@ -521,9 +536,9 @@ function files(p){const q=state.q.toLowerCase();const L=p.files.filter(f=>(state
   return `${hdr('Files','Every project file in one place: contracts, PDFs, AutoCAD, Revit, IFC and Navisworks files, specs, reports and permits.','<button class="btn pri" data-upload-file="1">Upload files</button>')}
   <div class="files"><div class="sheetlist">${FOLDERS.map(f=>`<button data-folder="${f}" class="${state.folder===f?'on':''}">${f} <span class="muted num">${f==='All files'?p.files.length:p.files.filter(x=>x.f===f).length}</span></button>`).join('')}</div>
   <div class="side"><div class="filters"><input id="q" type="search" placeholder="Search file names…" value="${esc(state.q)}"></div>
-  <div class="drop" id="drop">Drop files here to upload to <b>${esc(state.folder==='All files'?'Uploads':state.folder)}</b></div>
+  <div class="drop" id="drop">Drop files here to upload to <b>${esc(state.folder==='All files'?'Uploads':state.folder)}</b><div style="font-size:12px;margin-top:4px">Uploads stay after a refresh but are saved in this browser only.</div></div>
   <div class="tbl"><table><thead><tr><th>Type</th><th>Name</th><th>Folder</th><th>Version</th><th>Size</th><th>Uploaded</th><th></th></tr></thead><tbody>
-  ${L.sort((a,b)=>b.dt.localeCompare(a.dt)).map((f,i)=>{const [lab,cls]=ftype(f.n);const ifc=cls==='ifc';return `<tr><td><span class="ft ${cls}">${lab}</span></td><td style="overflow-wrap:anywhere">${esc(f.n)}</td><td>${esc(f.f)}</td><td class="num">v${f.v}</td><td class="num">${kb(f.sz)}</td><td class="num">${fmt(f.dt)} · ${who(f.by)}</td><td>${ifc&&f.bytes?`<button class="btn sm" data-open-ifc="${esc(f.n)}">View in 3D</button>`:cls==='nwd'?`<span class="muted" style="font-size:12px">Needs conversion</span>`:''}</td></tr>`}).join('')||'<tr><td colspan="7" class="muted">No files in this folder yet.</td></tr>'}
+  ${L.sort((a,b)=>b.dt.localeCompare(a.dt)).map((f,i)=>{const [lab,cls]=ftype(f.n);const ifc=cls==='ifc';return `<tr><td><span class="ft ${cls}">${lab}</span></td><td style="overflow-wrap:anywhere">${esc(f.n)}</td><td>${esc(f.f)}</td><td class="num">v${f.v}</td><td class="num">${kb(f.sz)}</td><td class="num">${fmt(f.dt)} · ${who(f.by)}</td><td><div class="btns" style="flex-wrap:nowrap">${ifc&&f.bytes?`<button class="btn sm" data-open-ifc="${esc(f.n)}">View in 3D</button>`:cls==='nwd'?`<span class="muted" style="font-size:12px">Needs conversion</span>`:''}${f.local?`<button class="btn sm" data-remove-file="${esc(f.n)}">Remove</button>`:''}</div></td></tr>`}).join('')||'<tr><td colspan="7" class="muted">No files in this folder yet.</td></tr>'}
   </tbody></table></div></div></div>`}
 
 function assets(p){const L=apply(p.assets,r=>r.st);
@@ -533,10 +548,27 @@ function assets(p){const L=apply(p.assets,r=>r.st);
   ${L.map(a=>`<tr data-open="assets:${a.id}"><td class="num">${a.id}</td><td>${esc(a.name)}<div class="muted">${esc(a.mfr)} ${esc(a.model)}</div></td><td>${esc(a.cat)}</td><td>${esc(a.loc)}</td><td class="num">${fmt(a.warr)}</td><td><div class="num">${a.docs}/${a.req}</div><div class="bar"><i style="width:${a.docs/a.req*100}%"></i></div></td><td>${pill(a.st)}</td></tr>`).join('')||'<tr><td colspan="7" class="muted">No assets on this project yet.</td></tr>'}
   </tbody></table></div>`}
 
-function team(p){return `${hdr('Team & access','Townline staff and external partners on this project. External users only see items assigned to them.','<button class="btn pri" data-new="invite">Invite person</button>')}
-  <div class="tbl"><table><thead><tr><th>Name</th><th>Company</th><th>Role</th><th>Access</th></tr></thead><tbody>
-  ${p.team.map(id=>{const u=P(id);return `<tr><td>${who(id)}</td><td>${esc(u.co)}</td><td>${esc(u.role)}</td><td>${u.ext?'Assigned items only':'Full project'}</td></tr>`}).join('')}
+const ROLES=['Senior VDC Manager','VDC Coordinator','Project Manager','Development Manager','Superintendent','Assistant Superintendent','Project Coordinator','Project Engineer',"Owner's Representative",'Architect','Structural Engineer','Mechanical Engineer','Electrical Engineer','Mechanical Trade','Electrical Trade','Plumbing Trade','Consultant'];
+const roleOf=(p,id)=>(p.roles&&p.roles[id])||P(id)?.role||'';
+const contact=u=>`${u.email?`<a href="mailto:${esc(u.email)}" style="color:var(--accent)">${esc(u.email)}</a>`:'<span class="muted">No email</span>'}<div class="muted num">${esc(u.phone||'No phone')}</div>`;
+function team(p){const ext=me().ext;return `${hdr('Project team',`People on ${esc(p.name)} and their role on this project. External users only see items assigned to them.`,ext?'':'<button class="btn pri" data-new="member">Add team member</button>')}
+  <div class="tbl"><table><thead><tr><th>Name</th><th>Project role</th><th>Company</th><th>Email</th><th>Phone</th><th>Access</th>${ext?'':'<th></th>'}</tr></thead><tbody>
+  ${p.team.map(id=>{const u=P(id);if(!u)return '';return `<tr><td>${who(id)}</td><td>${esc(roleOf(p,id))}</td><td>${esc(u.co)}</td><td>${u.email?`<a href="mailto:${esc(u.email)}" style="color:var(--accent)">${esc(u.email)}</a>`:'—'}</td><td class="num">${esc(u.phone||'—')}</td><td>${u.ext?'Assigned items only':'Full project'}</td>${ext?'':`<td><div class="btns" style="flex-wrap:nowrap"><button class="btn sm" data-member-role="${id}">Change role</button>${id===state.as?'':`<button class="btn sm" data-member-remove="${id}">Remove</button>`}</div></td>`}</tr>`}).join('')}
   </tbody></table></div>`}
+function users(){return `${hdr('Users','Everyone with a Sitebook account, Townline staff and external partners. Add people here, then add them to project teams.','<button class="btn pri" data-new="user">Add user</button>')}
+  <div class="tbl"><table><thead><tr><th>Name</th><th>Role</th><th>Company</th><th>Email</th><th>Phone</th><th>Type</th><th>Projects</th></tr></thead><tbody>
+  ${PEOPLE.map(u=>`<tr><td>${esc(u.name)}${u.sample?' <span class="muted" style="font-size:11px">(sample)</span>':''}</td><td>${esc(u.role)}</td><td>${esc(u.co)}</td><td>${u.email?esc(u.email):'—'}</td><td class="num">${esc(u.phone||'—')}</td><td>${u.ext?'External':'Townline'}</td><td class="num">${Object.keys(PROJECTS).filter(k=>PROJECTS[k].team.includes(u.id)).join(', ')||'—'}</td></tr>`).join('')}
+  </tbody></table></div>
+  <p class="note">Only Thomas Morrissey is a real user so far. The other people are sample users so the workflows can be tried out.</p>`}
+function profile(){const u=me();return `${hdr('My profile','Your contact details, shown to project teams you belong to.')}
+  <div class="grid2"><div class="card"><form class="f" data-profile="1">
+    <label for="pn">Full name<input id="pn" required value="${esc(u.name)}"></label>
+    <div class="row"><label for="pe">Email<input id="pe" type="email" value="${esc(u.email||'')}"></label><label for="pp">Phone<input id="pp" type="tel" value="${esc(u.phone||'')}"></label></div>
+    <div class="row"><label for="pr">Role<input id="pr" list="rolelist" value="${esc(u.role)}"></label><label for="pc">Company<input id="pc" value="${esc(u.co)}"></label></div>
+    <datalist id="rolelist">${ROLES.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>
+    <div class="btns"><button class="btn pri" type="submit">Save profile</button></div></form></div>
+  <div class="card"><h2>Project memberships</h2><div class="list">${Object.entries(PROJECTS).filter(([k,p])=>p.team.includes(u.id)).map(([k,p])=>`<div class="li"><span><span class="num">${k}</span> ${esc(p.name)}</span><span class="muted">${esc(roleOf(p,u.id))}</span></div>`).join('')||'<div class="li muted">Not on any project yet.</div>'}</div></div></div>
+  <p class="note">In this prototype, profile and team changes are saved in this browser only.</p>`}
 
 /* ---------- Detail drawer ---------- */
 function openDrawer(html){const dr=document.getElementById('drawer');document.getElementById('drawerIn').innerHTML=html;dr.hidden=false;document.querySelector('#drawerIn button')?.focus()}
@@ -579,6 +611,12 @@ function form(kind,pre={}){const p=cur();const team=p.team.map(P);const opt=sel=
     si:['Issue site instruction',`<label for="ft">Instruction<input id="ft" required></label><label for="fto">Issue to<select id="fto">${opt()}</select></label>`],
     co:['New change order',`<label for="ft">Description<input id="ft" required value="${esc(pre.t||'')}"></label><div class="row"><label for="famt">Amount (CAD)<input id="famt" type="number" required value="0"></label><label for="fsrc">Source<input id="fsrc" value="${esc(pre.src||'')}" placeholder="e.g. RFI-042"></label></div>`],
     asset:['Add asset',`<label for="ft">Name<input id="ft" required></label><div class="row"><label for="fcat">Category<select id="fcat"><option>HVAC</option><option>Plumbing</option><option>Electrical</option><option>Appliance</option><option>Life safety</option></select></label><label for="floc">Location<input id="floc" required></label></div><div class="row"><label for="fmfr">Manufacturer<input id="fmfr"></label><label for="fmod">Model<input id="fmod"></label></div>`],
+    desc:['Edit project description',`<label for="fdesc2">Description<textarea id="fdesc2" rows="7">${esc(p.desc||'')}</textarea></label><label for="fphase">Phase<select id="fphase">${['Preconstruction','Construction','Closeout','Warranty'].map(x=>`<option ${x===p.phase?'selected':''}>${x}</option>`).join('')}</select></label>`],
+    member:['Add team member',`<label for="fuser">Person<select id="fuser"><option value="__new">New person…</option>${PEOPLE.filter(u=>!p.team.includes(u.id)).map(u=>`<option value="${u.id}">${esc(u.name)} — ${esc(u.co)}</option>`).join('')}</select></label>
+      <div id="newfields" class="f" style="gap:12px"><div class="row"><label for="ft">Full name<input id="ft"></label><label for="fco">Company<input id="fco"></label></div><div class="row"><label for="fe">Email<input id="fe" type="email" placeholder="name@company.com"></label><label for="fph">Phone<input id="fph" type="tel"></label></div><label for="fext">Access<select id="fext"><option value="0">Townline staff (full project)</option><option value="1">External (assigned items only)</option></select></label></div>
+      <label for="frole">Role on this project<input id="frole" list="rolelist2" required placeholder="e.g. Superintendent"></label><datalist id="rolelist2">${ROLES.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>`],
+    user:['Add user',`<div class="row"><label for="ft">Full name<input id="ft" required></label><label for="fco">Company<input id="fco" required></label></div><div class="row"><label for="fe">Email<input id="fe" type="email" required></label><label for="fph">Phone<input id="fph" type="tel"></label></div><div class="row"><label for="frole">Role<input id="frole" list="rolelist3"></label><label for="fext">Type<select id="fext"><option value="0">Townline staff</option><option value="1">External partner</option></select></label></div><datalist id="rolelist3">${ROLES.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>`],
+    role:['Change project role',`<p style="margin:0">${esc(P(pre.id)?.name||'')}</p><input type="hidden" id="fid" value="${esc(pre.id||'')}"><label for="frole">Role on this project<input id="frole" list="rolelist4" required value="${esc(roleOf(p,pre.id))}"></label><datalist id="rolelist4">${ROLES.map(r=>`<option value="${esc(r)}">`).join('')}</datalist>`],
     invite:['Invite person',`<label for="ft">Name<input id="ft" required></label><label for="fco">Company<input id="fco" required></label><label for="fe">Email<input id="fe" type="email" placeholder="name@company.com"></label><label for="fext">Access<select id="fext"><option value="0">Townline staff (full project)</option><option value="1">External (assigned items only)</option></select></label>`],
     upload:['Upload sheets',`<label for="ff">PDF drawing set<input id="ff" type="file" accept=".pdf"></label><p class="muted">In production, each page is split into a sheet, numbered from its title block, and pre-rendered for fast viewing on site.</p>`]}[kind];
   openDrawer(`${CLOSE('Cancel')}<h2>${F[0]}</h2><form class="f" data-create="${kind}">${F[1]}<button class="btn pri" type="submit">Create</button></form>`);
@@ -598,6 +636,12 @@ function create(kind){const p=cur(),v=id=>document.getElementById(id)?.value||''
   if(kind==='si'){const n=NEXT(p.si,'SI');p.si.unshift({n,t:v('ft'),to:v('fto'),st:'Issued',date:'2026-10-09',cost:'Pending'});toast(`${n} issued`);state.tool='si'}
   if(kind==='co'){const n=NEXT(p.cos,'CO');p.cos.unshift({n,t:v('ft'),amt:+v('famt'),st:'Pending pricing',src:v('fsrc')||'—',date:'2026-10-09'});toast(`${n} created`);state.tool='cos'}
   if(kind==='asset'){const id='AST-'+String(1000+p.assets.length+Math.floor(Math.random()*900));p.assets.unshift({id,name:v('ft'),cat:v('fcat'),loc:v('floc'),mfr:v('fmfr')||'—',model:v('fmod')||'',warr:'2028-11-30',st:'Planned',docs:0,req:4});toast(`${id} added`);state.tool='assets'}
+  if(kind==='desc'){p.desc=v('fdesc2');p.phase=v('fphase');saveData();toast('Project description saved');state.tool='home'}
+  if(kind==='member'){let id=v('fuser');
+    if(id==='__new'){if(!v('ft')){toast('Enter the new person\'s name');return}id='u'+Date.now();PEOPLE.push({id,name:v('ft'),co:v('fco')||'—',role:v('frole'),email:v('fe'),phone:v('fph'),ext:v('fext')==='1'});selects()}
+    p.team.push(id);p.roles=p.roles||{};p.roles[id]=v('frole');saveData();toast(`${P(id).name} added as ${v('frole')}`)}
+  if(kind==='user'){const id='u'+Date.now();PEOPLE.push({id,name:v('ft'),co:v('fco'),role:v('frole')||(v('fext')==='1'?'External partner':'Townline staff'),email:v('fe'),phone:v('fph'),ext:v('fext')==='1'});saveData();selects();toast(`${v('ft')} added`);state.tool='users'}
+  if(kind==='role'){p.roles=p.roles||{};p.roles[v('fid')]=v('frole');saveData();toast('Role updated');state.tool='team'}
   if(kind==='invite'){const id='u'+Date.now();PEOPLE.push({id,name:v('ft'),co:v('fco'),role:v('fext')==='1'?'External partner':'Townline staff',ext:v('fext')==='1'});p.team.push(id);selects();toast(`${v('ft')} invited`);state.tool='team'}
   if(kind==='upload'){toast('Sheet upload is simulated in the prototype')}
   closeDrawer();view();
@@ -606,20 +650,43 @@ function create(kind){const p=cur(),v=id=>document.getElementById(id)?.value||''
 /* ---------- Uploads ---------- */
 let uploadMode='files';
 function pickFiles(mode){uploadMode=mode;const fi=document.getElementById('fileIn');fi.value='';fi.accept=mode==='model'?'.ifc,.nwd,.nwc':'';fi.click()}
-async function handleFiles(list){const p=cur();
+/* Uploads are kept in this browser (IndexedDB) so they survive a refresh. In production they go to server file storage. */
+const Store={db:null,
+  open(){if(!this.db)this.db=new Promise((res,rej)=>{try{const r=indexedDB.open('townline-sitebook',1);r.onupgradeneeded=()=>r.result.createObjectStore('uploads',{keyPath:'id'});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}catch(e){rej(e)}});return this.db},
+  async tx(mode,fn){const db=await this.open();return new Promise((res,rej)=>{const t=db.transaction('uploads',mode);const q=fn(t.objectStore('uploads'));t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)})},
+  put(rec){return this.tx('readwrite',s=>s.put(rec))},
+  del(id){return this.tx('readwrite',s=>s.delete(id))},
+  all(){return this.tx('readonly',s=>s.getAll())}};
+const recId=(proj,n)=>proj+'|'+n;
+async function keep(proj,entry,extra={}){
+  try{await Store.put({id:recId(proj,entry.n),proj,f:entry.f,n:entry.n,sz:entry.sz,by:entry.by,dt:entry.dt,v:entry.v,bytes:entry.bytes||null,...extra});return true}
+  catch(e){console.warn(e);toast(`${entry.n} is open now but is too large to keep in this browser after a refresh`);return false}}
+async function patchKept(proj,n,extra){try{const all=await Store.all();const r=all.find(x=>x.id===recId(proj,n));if(r)await Store.put({...r,...extra})}catch(e){console.warn(e)}}
+async function restoreUploads(){
+  let recs=[];try{recs=await Store.all()||[]}catch(e){return}
+  for(const r of recs.sort((a,b)=>(a.saved||0)-(b.saved||0))){const p=PROJECTS[r.proj];if(!p)continue;
+    if(!p.files.some(f=>f.n===r.n&&f.local))p.files.unshift({f:r.f,n:r.n,sz:r.sz,by:r.by,dt:r.dt,v:r.v,bytes:r.bytes,local:true});
+    if(r.model&&!p.modelFiles.some(m=>m.loadedName===r.n))p.modelFiles.push({key:null,loadedName:r.n,file:r.n,disc:r.n.replace(/\.ifc$/i,''),color:'#455a79',status:'Loaded',on:true,elements:r.elements||null,local:true});
+    if(r.nwd&&!p.modelFiles.some(m=>m.file===r.n))p.modelFiles.push({key:null,file:r.n,disc:'Navisworks',color:'#6d6e71',status:'Needs conversion',local:true});}
+  if(recs.length)view()}
+async function removeUpload(n){const p=cur();p.files=p.files.filter(f=>!(f.n===n&&f.local));
+  const m=p.modelFiles.find(x=>x.loadedName===n||(x.local&&x.file===n));if(m){p.modelFiles=p.modelFiles.filter(x=>x!==m);if(m.loadedName)window.TLViewer?.removeModel(m.loadedName)}
+  try{await Store.del(recId(state.proj,n))}catch(e){}toast(`${n} removed`);view()}
+async function handleFiles(list){const p=cur(),proj=state.proj;
   for(const file of list){const [,cls]=ftype(file.name);
     const folder=uploadMode==='model'||cls==='ifc'||cls==='nwd'||cls==='rvt'?'Models':(state.folder==='All files'?'Uploads':state.folder);
-    const entry={f:folder,n:file.name,sz:file.size,by:state.as,dt:'2026-10-09',v:1};
-    if(cls==='ifc'){entry.bytes=new Uint8Array(await file.arrayBuffer())}
+    const entry={f:folder,n:file.name,sz:file.size,by:state.as,dt:'2026-10-09',v:1,local:true,bytes:new Uint8Array(await file.arrayBuffer())};
+    const old=p.files.find(f=>f.n===entry.n&&f.local);if(old){entry.v=old.v+1;p.files=p.files.filter(f=>f!==old)}
     p.files.unshift(entry);
-    if(cls==='ifc'&&uploadMode==='model'){await openIfc(entry);continue}
-    if(cls==='nwd'){p.modelFiles.push({key:null,file:file.name,disc:'Navisworks',color:'#6d6e71',status:'Needs conversion'});toast(`${file.name} saved to Files. Navisworks files need conversion before they can be viewed.`);continue}
-    toast(`${file.name} uploaded to ${folder}`)}
+    if(cls==='ifc'&&uploadMode==='model'){await keep(proj,entry,{saved:Date.now()});await openIfc(entry);continue}
+    if(cls==='nwd'){if(!p.modelFiles.some(m=>m.file===file.name))p.modelFiles.push({key:null,file:file.name,disc:'Navisworks',color:'#6d6e71',status:'Needs conversion',local:true});await keep(proj,entry,{nwd:true,saved:Date.now()});toast(`${file.name} saved to Files. Navisworks files need conversion before they can be viewed.`);continue}
+    await keep(proj,entry,{saved:Date.now()});toast(`${file.name} uploaded to ${folder}`)}
   view()}
 async function openIfc(entry){const p=cur();let m=p.modelFiles.find(x=>x.loadedName===entry.n);
   if(!m){m={key:null,loadedName:entry.n,file:entry.n,disc:entry.n.replace(/\.ifc$/i,''),color:'#455a79',status:'Converting…',on:true};p.modelFiles.push(m)}
   state.tool='models';view();toast(`Opening ${entry.n}…`);
-  try{const V=await loadViewerLib();V.init(document.getElementById('viewerSlot'));const els=await V.loadIfcBytes(entry.n,entry.bytes);m.status='Loaded';m.elements=els; // kept so the model reloads after a project switch
+  try{const V=await loadViewerLib();V.init(document.getElementById('viewerSlot'));const els=await V.loadIfcBytes(entry.n,entry.bytes);m.status='Loaded';m.elements=els;m.local=true; // kept so the model reloads after a project switch
+    await patchKept(state.proj,entry.n,{model:true,elements:els}); // and after a page refresh
     toast(`${entry.n} loaded · ${els.length} elements`);view();V.fit()}
   catch(e){m.status='Could not open';toast(`${entry.n} could not be opened in the browser viewer`);console.error(e);view()}}
 
@@ -628,7 +695,7 @@ let tt;function toast(m){const t=document.getElementById('toast');t.textContent=
 /* ---------- Events ---------- */
 document.addEventListener('click',async e=>{
   if(e.target.id==='drawer'){closeDrawer();return}
-  const t=e.target.closest('[data-go-sheet],[data-go-model],[data-go-model-link],[data-go-sheet-link],[data-tool],[data-open],[data-new],[data-close],[data-sheet],[data-zoom],[data-place],[data-v],[data-resolve],[data-ack],[data-approve],[data-toco],[data-toast],[data-rv],[data-cm2ci],[data-folder],[data-upload-file],[data-upload-model],[data-open-ifc]');
+  const t=e.target.closest('[data-go-sheet],[data-go-model],[data-go-model-link],[data-go-sheet-link],[data-tool],[data-open],[data-new],[data-close],[data-sheet],[data-zoom],[data-place],[data-v],[data-resolve],[data-ack],[data-approve],[data-toco],[data-toast],[data-rv],[data-cm2ci],[data-folder],[data-upload-file],[data-upload-model],[data-open-ifc],[data-remove-file],[data-member-role],[data-member-remove]');
   if(!t)return;const ds=t.dataset;
   if(ds.goModelLink||ds.goSheetLink){e.stopPropagation();const n=t.closest('[data-ci]').dataset.ci;const c=cur().ci.find(x=>x.n===n);if(c.link.kind==='model')goModel(n);else goSheet(c.link.sheet,c.link.x,c.link.y,'ci:'+n);return}
   if(ds.goSheet){e.stopPropagation();const [s,x,y,id]=ds.goSheet.split(':');goSheet(s,+x,+y,id);return}
@@ -655,16 +722,21 @@ document.addEventListener('click',async e=>{
   if(ds.folder){state.folder=ds.folder;view();return}
   if(ds.uploadFile){pickFiles('files');return}
   if(ds.uploadModel){pickFiles('model');return}
+  if(ds.memberRole){form('role',{id:ds.memberRole});return}
+  if(ds.memberRemove){const p=cur();p.team=p.team.filter(x=>x!==ds.memberRemove);saveData();toast(`${P(ds.memberRemove).name} removed from ${p.name}`);view();return}
+  if(ds.removeFile){removeUpload(ds.removeFile);return}
   if(ds.openIfc){const f=cur().files.find(x=>x.n===ds.openIfc);if(f)openIfc(f);return}
   if(ds.toast){toast(ds.toast);return}
 });
 document.addEventListener('submit',e=>{e.preventDefault();const f=e.target;
   if(f.dataset.create)create(f.dataset.create);
+  if(f.dataset.profile){const u=me();u.name=document.getElementById('pn').value;u.email=document.getElementById('pe').value;u.phone=document.getElementById('pp').value;u.role=document.getElementById('pr').value;u.co=document.getElementById('pc').value;saveData();selects();toast('Profile saved');view()}
   if(f.dataset.respond){const r=cur().rfis.find(x=>x.n===f.dataset.respond);r.st='Answered';closeDrawer();toast(`Response sent on ${r.n}`);view()}
   if(f.dataset.comment){const r=cur().reviews.find(x=>x.n===f.dataset.comment);r.cm.push({by:state.as,sheet:document.getElementById('cmsheet').value,x:200+Math.round(Math.random()*500),y:150+Math.round(Math.random()*350),t:document.getElementById('cmt').value});toast('Comment posted');view();detail('reviews',r.n)}});
 document.addEventListener('input',e=>{if(e.target.id==='q'){state.q=e.target.value;const pos=e.target.selectionStart;view();const q=document.getElementById('q');if(q){q.focus();q.setSelectionRange(pos,pos)}}});
 document.addEventListener('change',e=>{if(e.target.id==='f'){state.f=e.target.value;view()}
   if(e.target.dataset.layer){const p=cur();const m=p.modelFiles.find(x=>(x.key||x.loadedName)===e.target.dataset.layer);if(m)m.on=e.target.checked;window.TLViewer?.setVisible(e.target.dataset.layer,e.target.checked)}
+  if(e.target.id==='fuser'){const nf=document.getElementById('newfields');if(nf)nf.hidden=e.target.value!=='__new'}
   if(e.target.id==='fileIn'){handleFiles([...e.target.files])}
   if(e.target.id==='proj'){state.proj=e.target.value;state.q='';state.f='all';state.sheet=null;state.vb=null;state.sel=null;state.focus=null;mountViewer.fitted=false;window.TLViewer?.select(null);view();toast('Switched to '+cur().name)}
   if(e.target.id==='as'){state.as=e.target.value;view()}});
@@ -672,7 +744,9 @@ document.addEventListener('dragover',e=>{const dz=e.target.closest?.('#drop');if
 document.addEventListener('dragleave',e=>{const dz=e.target.closest?.('#drop');if(dz)dz.classList.remove('over')});
 document.addEventListener('drop',e=>{const dz=e.target.closest?.('#drop');if(dz){e.preventDefault();uploadMode='files';handleFiles([...e.dataTransfer.files])}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeDrawer();if(state.placing){state.placing=false;view()}}});
-selects();view();
+function saveData(){try{localStorage.setItem('sb-data',JSON.stringify({people:PEOPLE,proj:Object.fromEntries(Object.entries(PROJECTS).map(([k,p])=>[k,{desc:p.desc,phase:p.phase,team:p.team,roles:p.roles||{}}]))}))}catch(e){}}
+function loadData(){try{const d=JSON.parse(localStorage.getItem('sb-data')||'null');if(!d)return;
+  (d.people||[]).forEach(sp=>{const u=PEOPLE.find(x=>x.id===sp.id);if(u)Object.assign(u,sp);else PEOPLE.push(sp)});
+  Object.entries(d.proj||{}).forEach(([k,sp])=>{const p=PROJECTS[k];if(p)Object.assign(p,sp)})}catch(e){}}
+loadData();selects();view();restoreUploads();
 </script>
-
-</body></html>
